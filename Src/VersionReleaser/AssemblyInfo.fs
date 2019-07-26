@@ -1,4 +1,4 @@
-﻿namespace MetadataBuilder.AssemblyInfo
+﻿namespace VersionReleaser.AssemblyInfo
 
 open System.Reflection
 open System.Runtime.CompilerServices
@@ -7,11 +7,11 @@ open System.Runtime.InteropServices
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[<assembly: AssemblyTitle("MetadataBuilder")>]
+[<assembly: AssemblyTitle("VersionReleaser")>]
 [<assembly: AssemblyDescription("")>]
 [<assembly: AssemblyConfiguration("")>]
 [<assembly: AssemblyCompany("")>]
-[<assembly: AssemblyProduct("MetadataBuilder")>]
+[<assembly: AssemblyProduct("VersionReleaser")>]
 [<assembly: AssemblyCopyright("Copyright ©  2019")>]
 [<assembly: AssemblyTrademark("")>]
 [<assembly: AssemblyCulture("")>]
@@ -22,7 +22,7 @@ open System.Runtime.InteropServices
 [<assembly: ComVisible(false)>]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[<assembly: Guid("36104ddd-e4e6-46d9-b50c-5038f451e92d")>]
+[<assembly: Guid("ee4ce36a-b274-428a-a0c9-cf273ea5a951")>]
 
 // Version information for an assembly consists of the following four values:
 //
