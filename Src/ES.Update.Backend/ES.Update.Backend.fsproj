@@ -44,6 +44,7 @@
     <Content Include="packages.config" />
     <None Include="paket.references" />
     <Compile Include="AssemblyInfo.fs" />
+    <Compile Include="Utility.fs" />
     <Compile Include="UpdateManager.fs" />
     <Compile Include="Server.fs" />
   </ItemGroup>
@@ -51,6 +52,7 @@
     <Reference Include="mscorlib" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.IO.Compression" />
     <Reference Include="System.Numerics" />
     <Reference Include="System.ValueTuple">
       <HintPath>..\packages\System.ValueTuple.4.4.0\lib\net47\System.ValueTuple.dll</HintPath>
@@ -64,6 +66,13 @@
   <Target Name="AfterBuild">
   </Target>
   -->
+  <ItemGroup>
+    <ProjectReference Include="..\ES.Update\ES.Update.fsproj">
+      <Name>ES.Update</Name>
+      <Project>{b68eadf0-b0db-46a6-949a-9133cabb067a}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+  </ItemGroup>
   <Choose>
     <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And ($(TargetFrameworkVersion) == 'v4.5' Or $(TargetFrameworkVersion) == 'v4.5.1' Or $(TargetFrameworkVersion) == 'v4.5.2' Or $(TargetFrameworkVersion) == 'v4.5.3' Or $(TargetFrameworkVersion) == 'v4.6' Or $(TargetFrameworkVersion) == 'v4.6.1' Or $(TargetFrameworkVersion) == 'v4.6.2' Or $(TargetFrameworkVersion) == 'v4.6.3' Or $(TargetFrameworkVersion) == 'v4.7' Or $(TargetFrameworkVersion) == 'v4.7.1' Or $(TargetFrameworkVersion) == 'v4.7.2' Or $(TargetFrameworkVersion) == 'v4.8')">
       <ItemGroup>
@@ -90,13 +99,6 @@
       <Private>True</Private>
       <Paket>True</Paket>
     </Reference>
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\ES.Update\ES.Update.fsproj">
-      <Name>ES.Update</Name>
-      <Project>{b68eadf0-b0db-46a6-949a-9133cabb067a}</Project>
-      <Private>True</Private>
-    </ProjectReference>
   </ItemGroup>
   <Choose>
     <When Condition="$(TargetFrameworkIdentifier) == 'MonoAndroid' And ($(TargetFrameworkVersion) == 'v7.0' Or $(TargetFrameworkVersion) == 'v7.1')">

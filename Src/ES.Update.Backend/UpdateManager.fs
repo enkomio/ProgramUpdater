@@ -9,4 +9,4 @@ type UpdateManager(workingDirectory: String) =
         "0"
 
     member this.GetUpdates() =
-        Array.empty<UpdateBundle>
+        0

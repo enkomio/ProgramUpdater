@@ -19,7 +19,7 @@ module MetadataBuilder =
         |> Seq.map(fun (name, content) -> (name, content, sha1(content)))
         |> Seq.toArray
 
-    let private saveApplication(workingDirectory: String, releaseFile: String, files: (String * Byte array * String) array) =
+    let private saveApplicationMetadata(workingDirectory: String, releaseFile: String, files: (String * Byte array * String) array) =
         let fileContent = new StringBuilder()        
         files |> Array.iter(fun (name, _, sha1) ->
             fileContent.AppendFormat("{0},{1}", sha1, name).AppendLine() |> ignore
@@ -31,12 +31,16 @@ module MetadataBuilder =
         let filename = Path.Combine(versionsDirectory, String.Format("{0}.txt", extractVersion(releaseFile)))
         File.WriteAllText(filename, fileContent.ToString())
 
-    let private saveFilesContent(workingDirectory: String, files: (String * Byte array * String) array) =
-        let fileBucketDir = Path.Combine(workingDirectory, "FileBucket")
+    let private saveFilesContent(workingDirectory: String, releaseFile: String, files: (String * Byte array * String) array) =
+        let fileBucketDir = Path.Combine(workingDirectory, "FileBucket", extractVersion(releaseFile).ToString())
         Directory.CreateDirectory(fileBucketDir) |> ignore
 
         // compute the new files that must be copied
-        let allSha1Files = Directory.GetFiles(fileBucketDir) |> Array.map(Path.GetFileNameWithoutExtension) |> Set.ofArray
+        let allSha1Files = 
+            getAllHashPerVersion(workingDirectory) 
+            |> Array.collect(snd) 
+            |> Set.ofArray
+
         let allVersionSha1 = files |> Array.map(fun (_, _, sha1) -> sha1) |> Set.ofArray
         let newSha1Files = Set.difference allVersionSha1 allSha1Files
 
@@ -50,5 +54,5 @@ module MetadataBuilder =
 
     let createReleaseMetadata(workingDirectory: String, releaseFile: String, logProvider: ILogProvider) =
         let files = getVersionFilesSummary(releaseFile)
-        saveApplication(workingDirectory, releaseFile, files)
-        saveFilesContent(workingDirectory, files)
+        saveApplicationMetadata(workingDirectory, releaseFile, files)
+        saveFilesContent(workingDirectory, releaseFile, files)
