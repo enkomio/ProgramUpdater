@@ -4,12 +4,13 @@ open System
 
 module Entities =
     [<CLIMutable>]
-    type UpdateFile = {
+    type File = {
         Path: String
-        Md5: String
+        Sha1: String
     }
 
     [<CLIMutable>]
-    type UpdateBundle = {
-        Files: UpdateFile array
+    type Application = {
+        Version: Version
+        Files: File array
     }

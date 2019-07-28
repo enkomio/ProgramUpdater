@@ -13,12 +13,7 @@ type Updater(serverUri: Uri, currentVersion: Version) =
         let latestVersion = contactServer("/latest") |> Version.Parse
         latestVersion > currentVersion
 
-    member this.GetUpdate() =
-        {Files = Array.empty}
 
     interface IUpdater with
         member this.CheckForUpdates() =
             this.CheckForUpdates()
-
-        member this.GetUpdate() =
-            this.GetUpdate()
