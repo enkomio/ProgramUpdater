@@ -14,7 +14,7 @@ module MetadataBuilder =
         log "MetadataBuilder"
         |> info "AnalyzeReleaseFile" "Analyze release file: {0}"
         |> info "SaveMetadata" "Saving release metadata"
-        |> info "SavingFiles" "Saving artifact to update"
+        |> info "SavingFiles" "Saving artifacts to update"
         |> info "SavingFile" "Adding new file '{0}' as {1}"
         |> info "Completed" "Process completed"
         |> build
