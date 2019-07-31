@@ -59,8 +59,7 @@ module Program =
                 printUsage(parser.PrintUsage())
                 0
             else
-                let defaultWorkingDir = Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), "Workspace")
-                let workingDir = results.GetResult(<@ Working_Dir @>, defaultWorkingDir)
+                let workingDir = results.GetResult(<@ Working_Dir @>, Settings.Read().WorkspaceDirectory)
                 Directory.CreateDirectory(workingDir) |> ignore
                 let filename = results.GetResult(<@ File @>)
                 let logProvider = createLogProvider()
