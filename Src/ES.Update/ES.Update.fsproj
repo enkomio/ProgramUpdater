@@ -44,7 +44,6 @@
     <Content Include="packages.config" />
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="Utility.fs" />
-    <Compile Include="Entities.fs" />
     <Compile Include="IUpdater.fs" />
     <Compile Include="Updater.fs" />
   </ItemGroup>

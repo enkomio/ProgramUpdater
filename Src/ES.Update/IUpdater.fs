@@ -1,7 +1,6 @@
 ﻿namespace ES.Update
 
 open System
-open ES.Update.Entities
 
 type IUpdater =
     interface

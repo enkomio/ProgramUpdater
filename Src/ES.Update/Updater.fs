@@ -2,7 +2,6 @@
 
 open System
 open System.Net
-open Entities
 
 type Updater(serverUri: Uri, currentVersion: Version) =
     let contactServer(path: String) =
