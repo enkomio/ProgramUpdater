@@ -6,7 +6,6 @@ open System.Text
 open ES.Update.Backend.Entities
 
 type UpdateManager(workingDirectory: String) =
-
     let mutable _applications : Application array = Array.empty
 
     let populateKnowledgeBase() =

@@ -12,10 +12,9 @@ open Suave.Operators
 open Suave.RequestErrors
 open Suave.Filters
 open Suave.Files
-open ES.Fslog
 open Entities
 
-type Server(binding: String, workspaceDirectory: String, logProvider: ILogProvider) as this =
+type Server(binding: String, workspaceDirectory: String) as this =
     let _shutdownToken = new CancellationTokenSource()
     let mutable _updateManager: UpdateManager option = None
         

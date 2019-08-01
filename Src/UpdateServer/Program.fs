@@ -21,6 +21,6 @@ module Program =
     let main argv = 
         let logProvider = configureLogProvider(false)
         let settings = Settings.Read()
-        let server = new Server(settings.BindingAddress, settings.WorkspaceDirectory, logProvider)
+        let server = new Server(settings.BindingAddress, settings.WorkspaceDirectory)
         server.Start()
         0
