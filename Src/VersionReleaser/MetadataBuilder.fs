@@ -34,7 +34,7 @@ module MetadataBuilder =
         memStream.ToArray()
 
     let private getVersionFilesSummary(releaseFile: String) =
-        let patternsToExclude = Settings.Read().PatternToExclude
+        let patternsToExclude = VersionReleaser.Settings.Read().PatternToExclude
         use fileHandle = File.OpenRead(releaseFile)
         
         // inspect zip
