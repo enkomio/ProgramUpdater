@@ -49,6 +49,10 @@
     <None Include="App.config" />
     <Content Include="packages.config" />
     <None Include="paket.references" />
+    <None Include="configuration.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <Compile Include="Settings.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>

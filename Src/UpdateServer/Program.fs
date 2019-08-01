@@ -20,6 +20,7 @@ module Program =
     [<EntryPoint>]
     let main argv = 
         let logProvider = configureLogProvider(false)
-        let server = new Server("http://127.0.0.1", logProvider)
+        let settings = Settings.Read()
+        let server = new Server(settings.BindingAddress, settings.WorkspaceDirectory, logProvider)
         server.Start()
         0
