@@ -2,7 +2,7 @@
 
 open System
 open System.IO
-open System.Collections.Generic
+open System.Text
 open ES.Update.Backend.Entities
 
 type UpdateManager(workingDirectory: String) =
@@ -50,19 +50,30 @@ type UpdateManager(workingDirectory: String) =
             yield (allFiles |> Seq.find(fun file -> file.Sha1 = hash))
     |]
 
-    let getFiles(hashes: String seq) =
+    let createHashFile(files: File array) =
+        let fileContent = new StringBuilder()        
+        files |> Array.iter(fun file ->
+            fileContent.AppendFormat("{0},{1}", file.Sha1, file.Path).AppendLine() |> ignore
+        )
+        fileContent.ToString() |> Encoding.UTF8.GetBytes
+
+    let getFiles(hashes: String seq) = [|
         let fileBucketDirectory = Path.Combine(workingDirectory, "FileBucket")
         let allFiles = Directory.GetFiles(fileBucketDirectory, "*", SearchOption.AllDirectories)
+        let updateFiles = mapHashToFile(hashes)
 
-        mapHashToFile(hashes)
-        |> Array.map(fun file ->            
+        // add the hash file to check the consistence
+        yield ("sha1", createHashFile(updateFiles))
+
+        // add the effective files
+        for file in updateFiles do          
             let version =
                 allFiles 
                 |> Array.find(fun f -> Path.GetFileNameWithoutExtension(f).Equals(file.Sha1, StringComparison.OrdinalIgnoreCase))
                 |> Path.GetDirectoryName
             let fileName = Path.Combine(fileBucketDirectory, version, file.Sha1)
-            (file.Path, File.ReadAllBytes(fileName))
-        )
+            yield (file.Path, File.ReadAllBytes(fileName))
+    |]  
 
     member this.GetApplication(version: Version) =
         _applications |> Seq.tryFind(fun app -> app.Version = version)
