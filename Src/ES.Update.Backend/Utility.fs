@@ -2,18 +2,16 @@
 
 open System
 open System.IO
-open System.Net
 open System.IO.Compression
-open System.Security.Cryptography
 
 [<AutoOpen>]
 module Utility =
 
-    let getAllHashPerVersion(workingDirectory: String) =
-        Directory.GetFiles(Path.Combine(workingDirectory, "Versions"))
-        |> Array.map(fun filename ->
-            (
-                Path.GetFileNameWithoutExtension(filename),            
-                (File.ReadAllLines(filename) |> Array.map(fun line -> line.Split([|','|]).[0]))
-            )
+    let createZipFile(zipFile: String, files: (string * Byte array) array) =
+        use zipStream = File.OpenWrite(zipFile)
+        use zipArchive = new ZipArchive(zipStream, ZipArchiveMode.Create)
+        files |> Array.iter(fun (name, content) ->
+            let zipEntry = zipArchive.CreateEntry(name)
+            use zipEntryStream = zipEntry.Open()
+            zipEntryStream.Write(content, 0, content.Length)
         )
