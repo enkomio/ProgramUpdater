@@ -59,6 +59,7 @@ module Program =
         logProvider.AddLogSourceToLoggers(_logger)
         let settings = Settings.Read()
 
+        // no private keys specified, read the content from file
         if String.IsNullOrWhiteSpace(settings.PrivateKey) then 
             createEncryptionKeys(settings)
 
