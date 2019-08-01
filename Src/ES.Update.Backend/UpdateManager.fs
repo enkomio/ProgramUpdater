@@ -2,6 +2,7 @@
 
 open System
 open System.IO
+open System.Collections.Generic
 open ES.Update.Backend.Entities
 
 type UpdateManager(workingDirectory: String) =
@@ -51,11 +52,20 @@ type UpdateManager(workingDirectory: String) =
 
     let getFiles(hashes: String seq) =
         let fileBucketDirectory = Path.Combine(workingDirectory, "FileBucket")
+        let allFiles = Directory.GetFiles(fileBucketDirectory, "*", SearchOption.AllDirectories)
+
         mapHashToFile(hashes)
-        |> Array.map(fun file ->
-            let fileName = Path.Combine(fileBucketDirectory, file.Sha1)
+        |> Array.map(fun file ->            
+            let version =
+                allFiles 
+                |> Array.find(fun f -> Path.GetFileNameWithoutExtension(f).Equals(file.Sha1, StringComparison.OrdinalIgnoreCase))
+                |> Path.GetDirectoryName
+            let fileName = Path.Combine(fileBucketDirectory, version, file.Sha1)
             (file.Path, File.ReadAllBytes(fileName))
         )
+
+    member this.GetApplication(version: Version) =
+        _applications |> Seq.tryFind(fun app -> app.Version = version)
     
     member this.GetLatestVersion() =
         _applications
@@ -68,5 +78,4 @@ type UpdateManager(workingDirectory: String) =
             // compute updates
             let updateHashes = computeUpdate(version, application)
             getFiles(updateHashes)
-        | _ -> 
-            Array.empty
+        | _ -> Array.empty
