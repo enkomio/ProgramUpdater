@@ -11,16 +11,23 @@ open Suave.Writers
 open Suave.Operators
 open Suave.RequestErrors
 open Suave.Filters
+open Suave.Files
 open ES.Fslog
+open Entities
 
 type Server(binding: String, workspaceDirectory: String, logProvider: ILogProvider) as this =
     let _shutdownToken = new CancellationTokenSource()
     let mutable _updateManager: UpdateManager option = None
         
-    let postFilter (ctx: HttpContext) = async {
-        return Some ctx
-    }            
+    let getUpdateFileName(inputVersion: Version) =
+        let correctInputVersion =
+            match _updateManager.Value.GetApplication(inputVersion) with
+            | Some application-> application.Version.ToString()
+            | None -> "0"
 
+        let latestVersion = _updateManager.Value.GetLatestVersion().Value.Version.ToString()
+        String.Format("{0}-{1}.zip", correctInputVersion, latestVersion)
+        
     let preFilter (oldCtx: HttpContext) = async {   
         let! ctx = addHeader "X-Xss-Protection" "1; mode=block" oldCtx
         let! ctx = addHeader "Content-Security-Policy" "script-src 'self' 'unsafe-inline' 'unsafe-eval'" ctx.Value
@@ -33,12 +40,34 @@ type Server(binding: String, workspaceDirectory: String, logProvider: ILogProvid
         OK "-=[ Enkomio Updater Server ]=-" ctx
 
     let latest(ctx: HttpContext) =
-        OK (_updateManager.Value.GetLatestVersion()) ctx
+        match _updateManager.Value.GetLatestVersion() with
+        | Some application -> OK (application.Version.ToString()) ctx
+        | None -> OK "0" ctx
 
     let updates(ctx: HttpContext) =
-        
-        // TODO serialize updates to a ZIP file
-        OK "" ctx
+        let inputVersion = ref(new Version())
+        match ctx.request.queryParam "version" with
+        | Choice1Of2 version when Version.TryParse(version, inputVersion) ->
+            // compute zip filename
+            let storageDirectory = Path.Combine(workspaceDirectory, "Binaries")
+            let zipFile = Path.Combine(storageDirectory, getUpdateFileName(!inputVersion))
+
+            // check if we already compute this update, if not create it
+            if not(File.Exists(zipFile)) then
+                // compute updates
+                let updateFiles = _updateManager.Value.GetUpdates(!inputVersion)
+
+                // create the zip file and store it in the appropriate directory            
+                Directory.CreateDirectory(storageDirectory) |> ignore            
+                createZipFile(zipFile, updateFiles)
+
+            // send the update zip file
+            addHeader "Content-Type" "application/octet-stream"
+            >=> addHeader "Content-Disposition" ("inline; filename=\"" + Path.GetFileName(zipFile) + "\"")
+            >=> sendFile zipFile false
+            <| ctx
+        | _ -> 
+            BAD_REQUEST String.Empty ctx
 
     let authorize (webPart: WebPart) (ctx: HttpContext) =
         if this.Authenticate(ctx)
@@ -62,11 +91,11 @@ type Server(binding: String, workspaceDirectory: String, logProvider: ILogProvid
         GET >=> preFilter >=> choose [ 
             path "/" >=> index          
             path "/latest" >=> authorize latest
-        ] >=> postFilter
+        ]
 
         POST >=> preFilter >=> choose [ 
             path "/updates" >=> authorize updates
-        ] >=> postFilter
+        ]
     ] 
 
     abstract Authenticate: HttpContext -> Boolean
