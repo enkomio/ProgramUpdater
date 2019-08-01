@@ -13,7 +13,7 @@ open Suave.RequestErrors
 open Suave.Filters
 open ES.Fslog
 
-type Server(binding: String, logProvider: ILogProvider) as this =
+type Server(binding: String, workspaceDirectory: String, logProvider: ILogProvider) as this =
     let _shutdownToken = new CancellationTokenSource()
     let mutable _updateManager: UpdateManager option = None
         
@@ -36,7 +36,7 @@ type Server(binding: String, logProvider: ILogProvider) as this =
         OK (_updateManager.Value.GetLatestVersion()) ctx
 
     let updates(ctx: HttpContext) =
-        let updates = _updateManager.Value.GetUpdates()
+        
         // TODO serialize updates to a ZIP file
         OK "" ctx
 
@@ -54,9 +54,8 @@ type Server(binding: String, logProvider: ILogProvider) as this =
         }
 
     let createUpdateManager() =
-        let workspaceDir = Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), "Workspace")
-        Directory.CreateDirectory(workspaceDir) |> ignore
-        new UpdateManager(workspaceDir)
+        Directory.CreateDirectory(workspaceDirectory) |> ignore
+        new UpdateManager(workspaceDirectory)
 
     abstract GetRoutes: unit -> WebPart list
     default this.GetRoutes() = [
