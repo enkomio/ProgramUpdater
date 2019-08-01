@@ -127,11 +127,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ES.Update.Backend\ES.Update.Backend.fsproj">
-      <Name>ES.Update.Backend</Name>
-      <Project>{b311972c-ad50-41ca-afd3-ba67d227e86b}</Project>
-      <Private>True</Private>
-    </ProjectReference>
     <ProjectReference Include="..\ES.Update\ES.Update.fsproj">
       <Name>ES.Update</Name>
       <Project>{b68eadf0-b0db-46a6-949a-9133cabb067a}</Project>

@@ -7,7 +7,6 @@ open System.Text.RegularExpressions
 open System.IO.Compression
 open ES.Fslog
 open ES.Update
-open ES.Update.Backend
 
 module MetadataBuilder =
     let private _logger =
@@ -63,6 +62,15 @@ module MetadataBuilder =
         Directory.CreateDirectory(versionsDirectory) |> ignore
         let filename = Path.Combine(versionsDirectory, String.Format("{0}.txt", extractVersion(releaseFile)))
         File.WriteAllText(filename, fileContent.ToString())
+
+    let private getAllHashPerVersion(workingDirectory: String) =
+        Directory.GetFiles(Path.Combine(workingDirectory, "Versions"))
+        |> Array.map(fun filename ->
+            (
+                Path.GetFileNameWithoutExtension(filename),            
+                (File.ReadAllLines(filename) |> Array.map(fun line -> line.Split([|','|]).[0]))
+            )
+        )
 
     let private saveFilesContent(workingDirectory: String, releaseFile: String, files: (String * String) seq) =
         let releaseVersion = extractVersion(releaseFile).ToString()
