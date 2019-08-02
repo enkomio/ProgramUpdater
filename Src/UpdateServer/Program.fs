@@ -30,6 +30,8 @@ module Program =
         let curDir = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location)
         let privateFile = Path.Combine(curDir, "private.bin")
         let publicFile = Path.Combine(curDir, "public.bin")
+        let mutable privateKey = String.Empty
+        let mutable publicKey = String.Empty
 
         if not(File.Exists(privateFile)) || not(File.Exists(publicFile)) then
             _logger?CreateKeys()
@@ -39,16 +41,23 @@ module Program =
                     HashAlgorithm = CngAlgorithm.Sha256
                 )).Key
 
-            let privateKey = key.Export(CngKeyBlobFormat.EccPrivateBlob) |> Convert.ToBase64String
-            let publicKey = key.Export(CngKeyBlobFormat.EccPublicBlob) |> Convert.ToBase64String
+            privateKey <- key.Export(CngKeyBlobFormat.EccPrivateBlob) |> Convert.ToBase64String
+            publicKey <- key.Export(CngKeyBlobFormat.EccPublicBlob) |> Convert.ToBase64String
         
             File.WriteAllText(privateFile, privateKey)
             File.WriteAllText(publicFile, publicKey)
 
-            // data to print
+            // log data
             _logger?PublicKey(publicKey)
             _logger?PrivateKey(privateKey.[0..5])
             _logger?KeysCreated()
+        else
+            publicKey <- File.ReadAllText(publicFile)
+            privateKey <- File.ReadAllText(privateFile)
+
+            // log data
+            _logger?PublicKey(publicKey)
+            _logger?PrivateKey(privateKey.[0..5])
 
         settings.PrivateKey <- File.ReadAllText(privateFile)
 
