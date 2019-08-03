@@ -5,7 +5,7 @@ open System.IO
 open System.Text
 open ES.Update.Backend.Entities
 
-type UpdateManager(workingDirectory: String) =
+type UpdateManager(workingDirectory: String, privateKey: String) =
     let mutable _applications : Application array = Array.empty
 
     let populateKnowledgeBase() =
@@ -43,36 +43,27 @@ type UpdateManager(workingDirectory: String) =
         let newHashes = getApplicationHashes(latestApplication) |> Set.ofArray
         Set.difference newHashes oldHashes
 
-    let mapHashToFile(hashes: String seq) = [|
+    let mapHashToFile(hashes: String seq) = [
         let allFiles = _applications |> Seq.collect(fun app -> app.Files)
         for hash in hashes do
             yield (allFiles |> Seq.find(fun file -> file.Sha1 = hash))
-    |]
+    ]
 
-    let createHashFile(files: File array) =
-        let fileContent = new StringBuilder()        
-        files |> Array.iter(fun file ->
-            fileContent.AppendFormat("{0},{1}", file.Sha1, file.Path).AppendLine() |> ignore
-        )
-        fileContent.ToString() |> Encoding.UTF8.GetBytes
-
-    let getFiles(hashes: String seq) = [|
+    let getFiles(hashes: String seq) =
         let fileBucketDirectory = Path.Combine(workingDirectory, "FileBucket")
         let allFiles = Directory.GetFiles(fileBucketDirectory, "*", SearchOption.AllDirectories)
         let updateFiles = mapHashToFile(hashes)
-
-        // add the hash file to check the consistence
-        yield ("sha1", createHashFile(updateFiles))
-
-        // add the effective files
-        for file in updateFiles do          
+        
+        // calculate the files to add
+        updateFiles 
+        |> List.map(fun file ->
             let version =
                 allFiles 
                 |> Array.find(fun f -> Path.GetFileNameWithoutExtension(f).Equals(file.Sha1, StringComparison.OrdinalIgnoreCase))
                 |> Path.GetDirectoryName
             let fileName = Path.Combine(fileBucketDirectory, version, file.Sha1)
-            yield (file.Path, File.ReadAllBytes(fileName))
-    |]  
+            (file, File.ReadAllBytes(fileName))
+        )
 
     member this.GetApplication(version: Version) =
         _applications |> Seq.tryFind(fun app -> app.Version = version)
@@ -85,7 +76,14 @@ type UpdateManager(workingDirectory: String) =
     member this.GetUpdates(version: Version) =
         match this.GetLatestVersion() with
         | Some application when application.Version > version ->
-            // compute updates
+            // compute the new hashes to be added
             let updateHashes = computeUpdate(version, application)
             getFiles(updateHashes)
-        | _ -> Array.empty
+        | _ -> List.empty
+
+    member this.ComputeIntegrityInfo(files: File list) =
+        let fileContent = new StringBuilder()        
+        files |> List.iter(fun file ->
+            fileContent.AppendFormat("{0},{1}", file.Sha1, file.Path).AppendLine() |> ignore
+        )
+        fileContent.ToString()

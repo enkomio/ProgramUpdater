@@ -14,7 +14,7 @@ open Suave.Filters
 open Suave.Files
 open Entities
 
-type Server(binding: String, workspaceDirectory: String) as this =
+type Server(binding: String, workspaceDirectory: String, privatekey: String) as this =
     let _shutdownToken = new CancellationTokenSource()
     let mutable _updateManager: UpdateManager option = None
         
@@ -42,28 +42,33 @@ type Server(binding: String, workspaceDirectory: String) as this =
         match _updateManager.Value.GetLatestVersion() with
         | Some application -> OK (application.Version.ToString()) ctx
         | None -> OK "0" ctx
-
+        
     let updates(ctx: HttpContext) =
         let inputVersion = ref(new Version())
-        match ctx.request.queryParam "version" with
-        | Choice1Of2 version when Version.TryParse(version, inputVersion) ->
+        match tryGetPostParameters(["version"; "key"; "iv"], ctx) with
+        | Some values when Version.TryParse(values.["version"], inputVersion) ->
             // compute zip filename
             let storageDirectory = Path.Combine(workspaceDirectory, "Binaries")
             let zipFile = Path.Combine(storageDirectory, getUpdateFileName(!inputVersion))
 
             // check if we already compute this update, if not create it
-            if not(File.Exists(zipFile)) then
+            if not(File.Exists(zipFile)) then                
                 // compute updates
                 let updateFiles = _updateManager.Value.GetUpdates(!inputVersion)
-
+                let integrityInfo = _updateManager.Value.ComputeIntegrityInfo(updateFiles |> List.map(fst))
+                
                 // create the zip file and store it in the appropriate directory            
                 Directory.CreateDirectory(storageDirectory) |> ignore            
-                createZipFile(zipFile, updateFiles)
+                createZipFile(zipFile, updateFiles, integrityInfo)
+
+            // add signature to zip file
+            removeOldBinaryFiles(this.CacheCleanupSecondsTimeout)
+            let signedZip = addSignature(zipFile, values.["key"], values.["iv"], privatekey)            
 
             // send the update zip file
             addHeader "Content-Type" "application/octet-stream"
             >=> addHeader "Content-Disposition" ("inline; filename=\"" + Path.GetFileName(zipFile) + "\"")
-            >=> sendFile zipFile false
+            >=> sendFile signedZip false
             <| ctx
         | _ -> 
             BAD_REQUEST String.Empty ctx
@@ -83,7 +88,11 @@ type Server(binding: String, workspaceDirectory: String) as this =
 
     let createUpdateManager() =
         Directory.CreateDirectory(workspaceDirectory) |> ignore
-        new UpdateManager(workspaceDirectory)
+        new UpdateManager(workspaceDirectory, privatekey)
+
+    /// This timeout is used to clean the temporary update files that are generated
+    /// during the update process.
+    member val CacheCleanupSecondsTimeout = 24 * 60 * 60 with get, set
 
     abstract GetRoutes: unit -> WebPart list
     default this.GetRoutes() = [
