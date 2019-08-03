@@ -44,8 +44,8 @@
     <Content Include="packages.config" />
     <None Include="paket.references" />
     <Compile Include="AssemblyInfo.fs" />
-    <Compile Include="Utility.fs" />
     <Compile Include="Entities.fs" />
+    <Compile Include="Utility.fs" />
     <Compile Include="UpdateManager.fs" />
     <Compile Include="Server.fs" />
   </ItemGroup>
