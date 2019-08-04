@@ -5,7 +5,7 @@ open System.IO
 open System.Text
 open ES.Update.Backend.Entities
 
-type UpdateManager(workingDirectory: String, privateKey: String) =
+type UpdateManager(workingDirectory: String) =
     let mutable _applications : Application array = Array.empty
     
     let populateKnowledgeBase() =
@@ -23,12 +23,13 @@ type UpdateManager(workingDirectory: String, privateKey: String) =
             )
 
     do
-        populateKnowledgeBase()
+        if Directory.Exists(workingDirectory) then
+            populateKnowledgeBase()
 
-        // add directory watcher
-        let watcher = new FileSystemWatcher(workingDirectory)
-        watcher.Changed.Add(fun arg -> if arg.ChangeType = WatcherChangeTypes.Changed then populateKnowledgeBase())
-        watcher.EnableRaisingEvents <- true
+            // add directory watcher
+            let watcher = new FileSystemWatcher(workingDirectory)
+            watcher.Changed.Add(fun arg -> if arg.ChangeType = WatcherChangeTypes.Changed then populateKnowledgeBase())
+            watcher.EnableRaisingEvents <- true
 
     let getApplicationHashes(application: Application) =
         application.Files |> Array.map(fun file -> file.Sha1)
@@ -65,15 +66,18 @@ type UpdateManager(workingDirectory: String, privateKey: String) =
             (file, File.ReadAllBytes(fileName))
         )
 
-    member this.GetApplication(version: Version) =
+    abstract GetApplication: Version -> Application option
+    default this.GetApplication(version: Version) =
         _applications |> Seq.tryFind(fun app -> app.Version = version)
     
-    member this.GetLatestVersion() =
+    abstract GetLatestVersion: unit -> Application option
+    default this.GetLatestVersion() =
         _applications
         |> Seq.sortByDescending(fun application -> application.Version)
         |> Seq.tryHead
 
-    member this.GetUpdates(version: Version) =
+    abstract GetUpdates: Version -> (File * Byte array) list
+    default this.GetUpdates(version: Version) =
         match this.GetLatestVersion() with
         | Some application when application.Version > version ->
             // compute the new hashes to be added
@@ -81,7 +85,8 @@ type UpdateManager(workingDirectory: String, privateKey: String) =
             getFiles(updateHashes)
         | _ -> List.empty
 
-    member this.ComputeIntegrityInfo(files: File list) =
+    abstract ComputeIntegrityInfo: File list -> String
+    default this.ComputeIntegrityInfo(files: File list) =
         let fileContent = new StringBuilder()        
         files |> List.iter(fun file ->
             fileContent.AppendFormat("{0},{1}", file.Sha1, file.Path).AppendLine() |> ignore

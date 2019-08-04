@@ -2,7 +2,7 @@
 
 open System
 open System.IO
-open System.Reflection
+open System.Collections.Generic
 open System.Net
 open System.Threading
 open Suave
@@ -17,15 +17,27 @@ open Entities
 type Server(binding: String, workspaceDirectory: String, privatekey: String) as this =
     let _shutdownToken = new CancellationTokenSource()
     let _lock = new Object()
-    let mutable _updateManager: UpdateManager option = None
+    let _updateManagers = new Dictionary<String, UpdateManager>()
+
+    let getUpdateManager(projectName: String) =
+        _updateManagers.[projectName]
+
+    let createUpdateManagers() =
+        Directory.GetDirectories(workspaceDirectory)
+        |> Array.map(fun directory -> Path.GetFileName(directory))
+        |> Array.iter(fun projectName -> 
+            let projectDirectory = Path.Combine(workspaceDirectory, projectName)
+            Directory.CreateDirectory(projectDirectory) |> ignore
+            _updateManagers.[projectName] <- new UpdateManager(projectDirectory)
+        )
         
-    let getUpdateFileName(inputVersion: Version) =
+    let getUpdateFileName(inputVersion: Version, updateManager: UpdateManager) =
         let correctInputVersion =
-            match _updateManager.Value.GetApplication(inputVersion) with
+            match updateManager.GetApplication(inputVersion) with
             | Some application-> application.Version.ToString()
             | None -> "0"
 
-        let latestVersion = _updateManager.Value.GetLatestVersion().Value.Version.ToString()
+        let latestVersion = updateManager.GetLatestVersion().Value.Version.ToString()
         String.Format("{0}-{1}.zip", correctInputVersion, latestVersion)
         
     let preFilter (oldCtx: HttpContext) = async {   
@@ -40,24 +52,34 @@ type Server(binding: String, workspaceDirectory: String, privatekey: String) as 
         OK "-=[ Enkomio Updater Server ]=-" ctx
 
     let latest(ctx: HttpContext) =
-        match _updateManager.Value.GetLatestVersion() with
-        | Some application -> OK (application.Version.ToString()) ctx
-        | None -> OK "0" ctx
+        match ctx.request.queryParam "project"  with
+        | Choice1Of2 projectName when _updateManagers.ContainsKey(projectName) ->
+            match getUpdateManager(projectName).GetLatestVersion() with
+            | Some application -> OK (application.Version.ToString()) ctx
+            | None -> OK "0" ctx
+        | _ -> 
+            OK "0" ctx
         
     let updates(ctx: HttpContext) =
         let inputVersion = ref(new Version())
-        match tryGetPostParameters(["version"; "key"; "iv"], ctx) with
-        | Some values when Version.TryParse(values.["version"], inputVersion) ->
+        match tryGetPostParameters(["version"; "key"; "iv"; "project"], ctx) with
+        | Some values 
+            when 
+                Version.TryParse(values.["version"], inputVersion) 
+                && _updateManagers.ContainsKey(values.["project"]) ->        
+
+            let updateManager = getUpdateManager(values.["project"])
+            
             // compute zip filename
             let storageDirectory = Path.Combine(workspaceDirectory, "Binaries")
-            let zipFile = Path.Combine(storageDirectory, getUpdateFileName(!inputVersion))
+            let zipFile = Path.Combine(storageDirectory, getUpdateFileName(!inputVersion, updateManager))
 
             // check if we already compute this update, if not create it
             lock _lock (fun _ ->
                 if not(File.Exists(zipFile)) then
                     // compute updates
-                    let updateFiles = _updateManager.Value.GetUpdates(!inputVersion)
-                    let integrityInfo = _updateManager.Value.ComputeIntegrityInfo(updateFiles |> List.map(fst))
+                    let updateFiles = updateManager.GetUpdates(!inputVersion)
+                    let integrityInfo = updateManager.ComputeIntegrityInfo(updateFiles |> List.map(fst))
                 
                     // create the zip file and store it in the appropriate directory            
                     Directory.CreateDirectory(storageDirectory) |> ignore            
@@ -89,23 +111,19 @@ type Server(binding: String, workspaceDirectory: String, privatekey: String) as 
             cancellationToken = _shutdownToken.Token
         }
 
-    let createUpdateManager() =
-        Directory.CreateDirectory(workspaceDirectory) |> ignore
-        new UpdateManager(workspaceDirectory, privatekey)
-
     /// This timeout is used to clean the temporary update files that are generated
     /// during the update process.
     member val CacheCleanupSecondsTimeout = 24 * 60 * 60 with get, set
 
-    abstract GetRoutes: unit -> WebPart list
-    default this.GetRoutes() = [
+    abstract GetRoutes: String -> WebPart list
+    default this.GetRoutes(prefix: String) = [
         GET >=> preFilter >=> choose [ 
-            path "/" >=> index          
-            path "/latest" >=> authorize latest
+            path (prefix + "/") >=> index          
+            path (prefix + "/latest") >=> authorize latest
         ]
 
         POST >=> preFilter >=> choose [ 
-            path "/updates" >=> authorize updates
+            path (prefix + "/updates") >=> authorize updates
         ]
     ] 
 
@@ -113,13 +131,13 @@ type Server(binding: String, workspaceDirectory: String, privatekey: String) as 
     default this.Authenticate(ctx: HttpContext) =
         true
         
-    member this.Start() = 
-        // setup the update manager
-        _updateManager <- Some(createUpdateManager())        
+    member this.Start() =
+        // scan the workspace directory
+        createUpdateManagers()
 
         // start web server
         let cfg = buildCfg(binding)
-        let routes = this.GetRoutes() |> choose
+        let routes = this.GetRoutes(String.Empty) |> choose
         startWebServer cfg routes
 
     member this.Stop() =
