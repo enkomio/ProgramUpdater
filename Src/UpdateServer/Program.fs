@@ -24,43 +24,26 @@ module Program =
         let logLevel = if isVerbose then LogLevel.Verbose else LogLevel.Informational
         logProvider.AddLogger(new ConsoleLogger(logLevel, new ConsoleLogFormatter()))
         logProvider.AddLogger(new FileLogger(logLevel, Path.Combine(path, "updater-server.log")))
-        logProvider :> ILogProvider
+        logProvider :> ILogProvider    
 
     let private createEncryptionKeys(settings: Settings) =
         let curDir = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location)
         let privateFile = Path.Combine(curDir, "private.bin")
         let publicFile = Path.Combine(curDir, "public.bin")
-        let mutable privateKey = String.Empty
-        let mutable publicKey = String.Empty
 
         if not(File.Exists(privateFile)) || not(File.Exists(publicFile)) then
             _logger?CreateKeys()
-            use key =
-                (new ECDiffieHellmanCng(
-                    KeyDerivationFunction = ECDiffieHellmanKeyDerivationFunction.Hash,
-                    HashAlgorithm = CngAlgorithm.Sha256
-                )).Key
-
-            privateKey <- key.Export(CngKeyBlobFormat.EccPrivateBlob) |> Convert.ToBase64String
-            publicKey <- key.Export(CngKeyBlobFormat.EccPublicBlob) |> Convert.ToBase64String
-        
+            let (privateKey, publicKey) = Utility.createEncryptionKeys()                    
             File.WriteAllText(privateFile, privateKey)
             File.WriteAllText(publicFile, publicKey)
-
-            // log data
-            _logger?PublicKey(publicKey)
-            _logger?PrivateKey(privateKey.[0..5])
             _logger?KeysCreated()
-        else
-            publicKey <- File.ReadAllText(publicFile)
-            privateKey <- File.ReadAllText(privateFile)
+        
+        // read keys
+        settings.PrivateKey <- Utility.readPrivateKey(privateFile)
 
-            // log data
-            _logger?PublicKey(publicKey)
-            _logger?PrivateKey(privateKey.[0..5])
-
-        settings.PrivateKey <- File.ReadAllText(privateFile)
-
+        // log data
+        _logger?PublicKey(File.ReadAllText(publicFile))
+        _logger?PrivateKey(settings.PrivateKey.[0..5])
 
     [<EntryPoint>]
     let main argv = 
