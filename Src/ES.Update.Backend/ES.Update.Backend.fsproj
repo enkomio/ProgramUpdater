@@ -47,6 +47,7 @@
     <Compile Include="Entities.fs" />
     <Compile Include="Utility.fs" />
     <Compile Include="UpdateManager.fs" />
+    <Compile Include="UpdateService.fs" />
     <Compile Include="Server.fs" />
   </ItemGroup>
   <ItemGroup>
