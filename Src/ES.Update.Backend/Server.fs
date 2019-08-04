@@ -16,6 +16,7 @@ open Entities
 
 type Server(binding: String, workspaceDirectory: String, privatekey: String) as this =
     let _shutdownToken = new CancellationTokenSource()
+    let _lock = new Object()
     let mutable _updateManager: UpdateManager option = None
         
     let getUpdateFileName(inputVersion: Version) =
@@ -52,14 +53,16 @@ type Server(binding: String, workspaceDirectory: String, privatekey: String) as 
             let zipFile = Path.Combine(storageDirectory, getUpdateFileName(!inputVersion))
 
             // check if we already compute this update, if not create it
-            if not(File.Exists(zipFile)) then                
-                // compute updates
-                let updateFiles = _updateManager.Value.GetUpdates(!inputVersion)
-                let integrityInfo = _updateManager.Value.ComputeIntegrityInfo(updateFiles |> List.map(fst))
+            lock _lock (fun _ ->
+                if not(File.Exists(zipFile)) then
+                    // compute updates
+                    let updateFiles = _updateManager.Value.GetUpdates(!inputVersion)
+                    let integrityInfo = _updateManager.Value.ComputeIntegrityInfo(updateFiles |> List.map(fst))
                 
-                // create the zip file and store it in the appropriate directory            
-                Directory.CreateDirectory(storageDirectory) |> ignore            
-                createZipFile(zipFile, updateFiles, integrityInfo)
+                    // create the zip file and store it in the appropriate directory            
+                    Directory.CreateDirectory(storageDirectory) |> ignore            
+                    createZipFile(zipFile, updateFiles, integrityInfo)
+            )            
 
             // add signature to zip file
             removeOldBinaryFiles(this.CacheCleanupSecondsTimeout)
@@ -119,7 +122,7 @@ type Server(binding: String, workspaceDirectory: String, privatekey: String) as 
         let routes = this.GetRoutes() |> choose
         startWebServer cfg routes
 
-    member this.ShutDownServer() =
+    member this.Stop() =
         _shutdownToken.Cancel()
 
 

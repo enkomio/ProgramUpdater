@@ -7,7 +7,7 @@ open ES.Update.Backend.Entities
 
 type UpdateManager(workingDirectory: String, privateKey: String) =
     let mutable _applications : Application array = Array.empty
-
+    
     let populateKnowledgeBase() =
         _applications <-
             Directory.GetFiles(Path.Combine(workingDirectory, "Versions"))
