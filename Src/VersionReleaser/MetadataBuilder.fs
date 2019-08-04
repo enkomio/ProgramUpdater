@@ -18,6 +18,10 @@ module MetadataBuilder =
         |> info "Completed" "Process completed"
         |> build
 
+    let private extractProjectName(releaseFile: String) =        
+        let m = Regex.Match(releaseFile |> Path.GetFileName, "(.+?)[0-9]+(\.[0-9]+)+")
+        m.Groups.[1].Value.Trim('v').Trim('.')
+
     let private extractVersion(releaseFile: String) =
         let m = Regex.Match(releaseFile |> Path.GetFileName, "[0-9]+(\.[0-9]+)+")
         m.Value |> Version.Parse
@@ -96,16 +100,21 @@ module MetadataBuilder =
         |> Seq.filter(fun (_, sha1) -> newSha1Files.Contains(sha1) )
         |> Seq.iter(fun (name, sha1) ->
             let filename = Path.Combine(fileBucketDir, sha1)
-            _logger?SavingFile(name, sha1)
-            File.WriteAllBytes(filename, readZipEntryContent(name, entries))
+            if not(File.Exists(filename)) then
+                _logger?SavingFile(name, sha1)
+                File.WriteAllBytes(filename, readZipEntryContent(name, entries))
         )
 
     let createReleaseMetadata(workingDirectory: String, releaseFile: String, logProvider: ILogProvider) =
         logProvider.AddLogSourceToLoggers(_logger)
         _logger?AnalyzeReleaseFile(Path.GetFileName(releaseFile))
         let files = getVersionFilesSummary(releaseFile)
+        let projectWorkspace = Path.Combine(workingDirectory, extractProjectName(releaseFile))
+
         _logger?SaveMetadata()
-        saveApplicationMetadata(workingDirectory, releaseFile, files)
-        _logger?SavingFiles()
-        saveFilesContent(workingDirectory, releaseFile, files)
+        saveApplicationMetadata(projectWorkspace, releaseFile, files)
+        
+        _logger?SavingFiles()        
+        saveFilesContent(projectWorkspace, releaseFile, files)
+        
         _logger?Completed()
