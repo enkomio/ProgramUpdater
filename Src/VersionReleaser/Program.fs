@@ -4,12 +4,11 @@ open System
 open System.IO
 open System.Reflection
 open Argu
+open ES.Fslog
+open ES.Fslog.Loggers
+open ES.Fslog.TextFormatters
 
 module Program =
-    open ES.Fslog
-    open ES.Fslog.Loggers
-    open ES.Fslog.TextFormatters
-
     type CLIArguments =
         | [<MainCommand; Last>] File of file:String   
         | Working_Dir of path:String
