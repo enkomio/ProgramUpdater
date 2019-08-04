@@ -40,7 +40,12 @@ type Server(binding: String, workspaceDirectory: String, privateKey: String) as 
     let updates(ctx: HttpContext) =
         let inputVersion = ref(new Version())
         match tryGetPostParameters(["version"; "key"; "iv"; "project"], ctx) with
-        | Some values when Version.TryParse(values.["version"], inputVersion) ->
+        | Some values 
+            when 
+                Version.TryParse(values.["version"], inputVersion) 
+                && _updateService.IsValidProject(values.["project"]) 
+            ->
+            
             let signedZip = _updateService.GetUpdates(!inputVersion, values.["project"], values.["key"], values.["iv"])
 
             // send the update zip file

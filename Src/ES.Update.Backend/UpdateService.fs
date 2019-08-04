@@ -41,6 +41,9 @@ type UpdateService(workspaceDirectory: String, privateKey: String) =
         else
             None
 
+    member this.IsValidProject(projectName: String) =
+        _updateManagers.ContainsKey(projectName)
+
     member this.GetUpdates(version: Version, projectName: String, clientKey: String, clientIv: String) =
         let updateManager = getUpdateManager(projectName)
             
