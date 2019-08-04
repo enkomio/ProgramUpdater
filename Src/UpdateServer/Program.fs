@@ -29,6 +29,7 @@ module Program =
         |> info "PrivateKey" "Private key first bytes: {0}"
         |> info "KeysCreated" "Encryption keys created and saved to files. The public key must be distributed togheter with the updater"
         |> info "KeyExported" "Private key exported to file: {0}"
+        |> info "KeyImported" "Private key from file '{0}' imported. Be sure to set the public key accordingly."
         |> build
 
     let private printColor(msg: String, color: ConsoleColor) =
@@ -108,9 +109,15 @@ module Program =
                     let fileName = results.GetResult(<@ Export_Key @>)
                     File.WriteAllText(fileName, settings.PrivateKey)
                     _logger?KeyExported(fileName)
+
                 elif results.Contains(<@ Import_Key @>) then
-                    let filename = results.GetResult(<@ Import_Key @>)
-                    ()
+                    let fileName = results.GetResult(<@ Import_Key @>)
+                    let key = File.ReadAllText(fileName) |> Convert.FromBase64String
+                    let encryptedKey = Utility.encryptKey(key) |> Convert.ToBase64String
+                    let (privateFile, _) = getKeyFileNames()
+                    File.WriteAllText(privateFile, encryptedKey)
+                    _logger?KeyImported(fileName)
+
                 else
                     let server = new Server(settings.BindingAddress, settings.WorkspaceDirectory, settings.PrivateKey)
                     server.Start()       

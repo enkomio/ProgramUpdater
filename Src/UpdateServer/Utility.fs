@@ -25,7 +25,7 @@ module internal Utility =
         use sha = SHA256.Create()
         sha.ComputeHash(content)
 
-    let private encryptKey(data: Byte array) =
+    let encryptKey(data: Byte array) =
         let key = getMacAddresses() |> sha256
         let iv = getHardDiskSerials()
 
