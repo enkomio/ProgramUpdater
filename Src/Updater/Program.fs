@@ -11,10 +11,12 @@ open ES.Fslog.TextFormatters
 module Program =
     type CLIArguments =
         | Verbose
+        | Directory of path:String
     with
         interface IArgParserTemplate with
             member s.Usage =
                 match s with
+                | Directory _ -> "the directory where to apply the update."
                 | Verbose -> "print verbose log messages."
 
     let private printColor(msg: String, color: ConsoleColor) =
