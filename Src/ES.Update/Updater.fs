@@ -48,13 +48,15 @@ type Updater(serverUri: Uri, projectName: String, currentVersion: Version, serve
         // TODO
         ()
 
-    member this.CheckForUpdates() =
+    member this.GetLatestVersion() =
         let path = String.Format("/latest?project={0}", projectName)
 
         // contact server
         use webClient = new WebClient()
-        let latestVersion = webClient.DownloadString(new Uri(serverUri, path)) |> Version.Parse
-        latestVersion > currentVersion
+        webClient.DownloadString(new Uri(serverUri, path)) |> Version.Parse
+
+    member this.CheckForUpdates() =
+        this.GetLatestVersion() > currentVersion
 
     member this.GetUpdates() =
         let (sharedKey, iv, clientPublicKey) = generateEncryptionKey()
