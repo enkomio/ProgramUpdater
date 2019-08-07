@@ -24,12 +24,11 @@ type WebServer(binding: String, workspaceDirectory: String, privateKey: String, 
         let! ctx = addHeader "Content-Security-Policy" "script-src 'self' 'unsafe-inline' 'unsafe-eval'" ctx.Value
         let! ctx = addHeader "X-Frame-Options" "SAMEORIGIN" ctx.Value            
         let! ctx = addHeader "X-Content-Type-Options" "nosniff" ctx.Value
-        _logger.LogRequestStart(oldCtx)
         return Some ctx.Value
     }
 
     let postFilter (ctx: HttpContext) = async {                
-        _logger.LogRequestEnd(ctx)
+        _logger.LogRequest(ctx)
         return (Some ctx)
     }
 
