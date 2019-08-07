@@ -22,7 +22,7 @@ module Program =
 
     let private _logger =
         log "Updater"
-        |> info "NewVersion" "Found a more recent version. Start update"
+        |> info "NewVersion" "Found a more recent version: {0}. Start update"
         |> build
 
     let private printColor(msg: String, color: ConsoleColor) =
@@ -56,9 +56,11 @@ module Program =
     let private doUpdate(currentVersion: Version) =
         let settings = Settings.Read()
         let updater = new Updater(new Uri(settings.UpdateBaseUri), settings.ProjectName, currentVersion, settings.ServerPublicKey)
-        if updater.CheckForUpdates() then
-            _logger?NewVersion()
-            
+        let latestVersion = updater.GetLatestVersion()
+        
+        if latestVersion > currentVersion then
+            _logger?NewVersion(latestVersion)
+            let updates = updater.GetUpdates(currentVersion)
             ()
 
     [<EntryPoint>]

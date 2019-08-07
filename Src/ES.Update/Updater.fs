@@ -20,7 +20,7 @@ type Updater(serverUri: Uri, projectName: String, currentVersion: Version, serve
 
         (sharedKey, aes.IV, clientPublicKey)
 
-    let downloadUpdates(clientPublicKey: String, iv: Byte array) =
+    let downloadUpdates(clientPublicKey: String, iv: Byte array, resultFile: String) =
         try
             // configure request
             let webRequest = WebRequest.Create(new Uri(serverUri, "updates")) :?> HttpWebRequest
@@ -30,22 +30,29 @@ type Updater(serverUri: Uri, projectName: String, currentVersion: Version, serve
 
             // write data
             use streamWriter = new StreamWriter(webRequest.GetRequestStream())
-            let data = String.Format("version=1.2&key={0}&iv={1}&project=TaipanPro", clientPublicKey, Convert.ToBase64String(iv))
+            let data = 
+                String.Format(
+                    "version={0}&key={1}&iv={2}&project={3}", 
+                    currentVersion,
+                    clientPublicKey, 
+                    Convert.ToBase64String(iv),
+                    projectName
+                )
             streamWriter.Write(data)
             streamWriter.Close()
 
             // send the request and save the response to file
-            use webResponse = webRequest.GetResponse() :?> HttpWebResponse
-            use responseStream = webResponse.GetResponseStream()
-            let resultFile = Path.Combine(Path.GetTempPath(), Path.GetTempFileName())
+            use webResponse = webRequest.GetResponse() :?> HttpWebResponse            
+            use responseStream = webResponse.GetResponseStream()            
             use fileHandle = File.OpenWrite(resultFile)
             responseStream.CopyTo(fileHandle)
-            Some resultFile
-        with _ -> 
-            None
+            true
+        with _ ->
+            false
 
     member this.InstallUpdates(updateFile: String, sharedKey: Byte array, iv: Byte array) =
         // TODO
+        // 
         ()
 
     member this.GetLatestVersion() =
@@ -54,12 +61,15 @@ type Updater(serverUri: Uri, projectName: String, currentVersion: Version, serve
         // contact server
         use webClient = new WebClient()
         webClient.DownloadString(new Uri(serverUri, path)) |> Version.Parse
+        
+    member this.GetUpdates(version: Version) =
+        // prepare update file
+        let resultDirectory = Path.Combine(Path.GetTempPath(), projectName)
+        Directory.CreateDirectory(resultDirectory) |> ignore
+        let resultFile = Path.Combine(resultDirectory, version.ToString() + ".zip")
 
-    member this.CheckForUpdates() =
-        this.GetLatestVersion() > currentVersion
-
-    member this.GetUpdates() =
+        // generate keys, download updates and install them
         let (sharedKey, iv, clientPublicKey) = generateEncryptionKey()
-        match downloadUpdates(clientPublicKey, iv) with
-        | Some updateFile -> this.InstallUpdates(updateFile, sharedKey, iv)
-        | None -> ()
+        if File.Exists(resultFile) || downloadUpdates(clientPublicKey, iv, resultFile) then
+            this.InstallUpdates(resultFile, sharedKey, iv)
+            File.Delete(resultFile)
