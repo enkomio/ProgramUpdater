@@ -9,18 +9,20 @@ type UpdateManager(workingDirectory: String) =
     let mutable _applications : Application array = Array.empty
     
     let populateKnowledgeBase() =
-        _applications <-
-            Directory.GetFiles(Path.Combine(workingDirectory, "Versions"))
-            |> Array.map(fun fileName ->
-                {
-                    Version = Version.Parse(Path.GetFileNameWithoutExtension(fileName))
-                    Files =
-                        File.ReadAllLines(fileName)
-                        |> Array.map(fun line -> line.Trim().Split(','))
-                        |> Array.map(fun items -> (items.[0], String.Join(",", items.[1..])))
-                        |> Array.map(fun (sha1, path) -> {Sha1 = sha1; Path = path})
-                }
-            )
+        let versionDir = Path.Combine(workingDirectory, "Versions")
+        if Directory.Exists(versionDir) then
+            _applications <-            
+                Directory.GetFiles(versionDir)
+                |> Array.map(fun fileName ->
+                    {
+                        Version = Version.Parse(Path.GetFileNameWithoutExtension(fileName))
+                        Files =
+                            File.ReadAllLines(fileName)
+                            |> Array.map(fun line -> line.Trim().Split(','))
+                            |> Array.map(fun items -> (items.[0], String.Join(",", items.[1..])))
+                            |> Array.map(fun (sha1, path) -> {Sha1 = sha1; Path = path})
+                    }
+                )
 
     do
         if Directory.Exists(workingDirectory) then

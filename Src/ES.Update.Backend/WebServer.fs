@@ -24,7 +24,13 @@ type WebServer(binding: String, workspaceDirectory: String, privateKey: String, 
         let! ctx = addHeader "Content-Security-Policy" "script-src 'self' 'unsafe-inline' 'unsafe-eval'" ctx.Value
         let! ctx = addHeader "X-Frame-Options" "SAMEORIGIN" ctx.Value            
         let! ctx = addHeader "X-Content-Type-Options" "nosniff" ctx.Value
+        _logger.LogRequestStart(oldCtx)
         return Some ctx.Value
+    }
+
+    let postFilter (ctx: HttpContext) = async {                
+        _logger.LogRequestEnd(ctx)
+        return (Some ctx)
     }
 
     let index(ctx: HttpContext) =
@@ -58,11 +64,6 @@ type WebServer(binding: String, workspaceDirectory: String, privateKey: String, 
         | _ -> 
             BAD_REQUEST String.Empty ctx
 
-    let log (ctx: HttpContext) = async {                
-        _logger.LogRequest(ctx)        
-        return (Some ctx)
-    }
-
     let authorize (webPart: WebPart) (ctx: HttpContext) =
         if this.Authenticate(ctx)
         then webPart ctx
@@ -81,11 +82,11 @@ type WebServer(binding: String, workspaceDirectory: String, privateKey: String, 
         GET >=> preFilter >=> choose [ 
             path (prefix + "/") >=> index          
             path (prefix + "/latest") >=> authorize latest
-        ] >=> log
+        ] >=> postFilter
 
         POST >=> preFilter >=> choose [ 
             path (prefix + "/updates") >=> authorize updates
-        ] >=> log
+        ] >=> postFilter
     ]
 
     abstract Authenticate: HttpContext -> Boolean
