@@ -1,1 +1,5 @@
-﻿
+﻿{
+  "UpdateBaseUri": "http://127.0.0.1",
+  "ServerPublicKey": "RUNLNUIAAAAAhSeRNKcjOv9zrr6Plz71SzSxBBq2PDMN0fFlllHh9KTniq6HO6uw+TtSGOLuI0Ubu+ULHly966a3fxPKJe9uPPcBM+w7UvBAP5MrYMtWUScFUlv7yKoLmkLSuqVWJcAWHwFVSMgCsVpq1k22fZzFdp4XfXqUdEFW929eaL2fAVU0pac=",
+  "ProjectName": "TaipanPro"
+}

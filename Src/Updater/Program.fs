@@ -7,6 +7,7 @@ open ES.Fslog
 open System.Reflection
 open ES.Fslog.Loggers
 open ES.Fslog.TextFormatters
+open ES.Update
 
 module Program =
     type CLIArguments =
@@ -16,8 +17,13 @@ module Program =
         interface IArgParserTemplate with
             member s.Usage =
                 match s with
-                | Directory _ -> "the directory where to apply the update."
+                | Directory _ -> "the directory where to apply the update. If not specified use the current one."
                 | Verbose -> "print verbose log messages."
+
+    let private _logger =
+        log "Updater"
+        |> info "NewVersion" "Found a more recent version. Start update"
+        |> build
 
     let private printColor(msg: String, color: ConsoleColor) =
         Console.ForegroundColor <- color
@@ -47,6 +53,14 @@ module Program =
         logProvider.AddLogger(new FileLogger(logLevel, Path.Combine(path, "updater-client.log")))
         logProvider :> ILogProvider  
 
+    let private doUpdate(currentVersion: Version) =
+        let settings = Settings.Read()
+        let updater = new Updater(new Uri(settings.UpdateBaseUri), settings.ProjectName, currentVersion, settings.ServerPublicKey)
+        if updater.CheckForUpdates() then
+            _logger?NewVersion()
+            
+            ()
+
     [<EntryPoint>]
     let main argv = 
         printBanner()
@@ -58,7 +72,9 @@ module Program =
                 printUsage(parser.PrintUsage())                
             else                
                 let logProvider = configureLogProvider(results.Contains(<@ Verbose @>))
-                ()
+                logProvider.AddLogSourceToLoggers(_logger)
+                let currentVersion = Utility.readCurrentVersion()
+                doUpdate(currentVersion)
             0
         with 
             | :? ArguParseException ->
