@@ -12,10 +12,12 @@ open Suave.Operators
 open Suave.RequestErrors
 open Suave.Filters
 open Suave.Files
+open ES.Fslog
 
-type Server(binding: String, workspaceDirectory: String, privateKey: String) as this =
+type WebServer(binding: String, workspaceDirectory: String, privateKey: String, logProvider: ILogProvider) as this =
     let _shutdownToken = new CancellationTokenSource()
     let _updateService = new UpdateService(workspaceDirectory, privateKey)
+    let _logger = new WebServerLogger()
         
     let preFilter (oldCtx: HttpContext) = async {   
         let! ctx = addHeader "X-Xss-Protection" "1; mode=block" oldCtx
@@ -56,6 +58,11 @@ type Server(binding: String, workspaceDirectory: String, privateKey: String) as 
         | _ -> 
             BAD_REQUEST String.Empty ctx
 
+    let log (ctx: HttpContext) = async {                
+        _logger.LogRequest(ctx)        
+        return (Some ctx)
+    }
+
     let authorize (webPart: WebPart) (ctx: HttpContext) =
         if this.Authenticate(ctx)
         then webPart ctx
@@ -74,18 +81,20 @@ type Server(binding: String, workspaceDirectory: String, privateKey: String) as 
         GET >=> preFilter >=> choose [ 
             path (prefix + "/") >=> index          
             path (prefix + "/latest") >=> authorize latest
-        ]
+        ] >=> log
 
         POST >=> preFilter >=> choose [ 
             path (prefix + "/updates") >=> authorize updates
-        ]
-    ] 
+        ] >=> log
+    ]
 
     abstract Authenticate: HttpContext -> Boolean
     default this.Authenticate(ctx: HttpContext) =
         true
         
     member this.Start() =
+        logProvider.AddLogSourceToLoggers(_logger)
+
         // start web server
         let cfg = buildCfg(binding)
         let routes = this.GetRoutes(String.Empty) |> choose

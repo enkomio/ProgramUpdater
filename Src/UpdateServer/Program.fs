@@ -119,7 +119,13 @@ module Program =
                     _logger?KeyImported(fileName)
 
                 else
-                    let server = new Server(settings.BindingAddress, settings.WorkspaceDirectory, settings.PrivateKey)
+                    let server = 
+                        new WebServer(
+                            settings.BindingAddress, 
+                            settings.WorkspaceDirectory, 
+                            settings.PrivateKey, 
+                            logProvider
+                        )
                     server.Start()       
                 0
         with 
