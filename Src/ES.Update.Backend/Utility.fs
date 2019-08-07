@@ -17,13 +17,11 @@ module Utility =
         use cng = new ECDiffieHellmanCng(CngKey.Import(privateBytes, CngKeyBlobFormat.EccPrivateBlob, CngProvider.MicrosoftSoftwareKeyStorageProvider))
         cng.DeriveKeyMaterial(CngKey.Import(publicBytes, CngKeyBlobFormat.EccPublicBlob))
 
-    let private encrypt(data: String, clientKey: String, iv: String, privateKey: String) =
-        use aes = new AesManaged(Key = getEncryptionKey(clientKey, privateKey), IV = Convert.FromBase64String(iv))
-        use ms = new MemoryStream()
-        use sw = new StreamWriter(new CryptoStream(ms, aes.CreateEncryptor(), CryptoStreamMode.Write))
-        sw.Write(data)
-        sw.Close()
-        ms.ToArray()
+    let private sign(data: String, clientKey: String, iv: String, privateKey: String) =
+        let key = getEncryptionKey(clientKey, privateKey)
+        let iv = Convert.FromBase64String(iv)
+        let signature = sha1Raw(Encoding.UTF8.GetBytes(data))
+        encrypt(signature, key, iv)
 
     let private readIntegrityInfo(zipFile: String) = 
         use zipStream = File.OpenRead(zipFile)
@@ -42,8 +40,7 @@ module Utility =
         use zipArchive = new ZipArchive(zipStream, ZipArchiveMode.Update)
         let zipEntry = zipArchive.CreateEntry("signature")
         use zipEntryStream = zipEntry.Open()
-        let sha1Signature = sha1Raw(signature)
-        zipEntryStream.Write(sha1Signature, 0, sha1Signature.Length)
+        zipEntryStream.Write(signature, 0, signature.Length)
 
     let removeOldBinaryFiles(timeout: Int32) =
         let treshold = DateTime.Now.Subtract(TimeSpan.FromSeconds(float timeout))
@@ -73,7 +70,7 @@ module Utility =
 
         // compute signature and add it to the new file
         let integrityInfo = readIntegrityInfo(zipFile)
-        let signature = encrypt(integrityInfo, clientkey, iv, privateKey)        
+        let signature = sign(integrityInfo, clientkey, iv, privateKey)        
         addSignatureEntry(signedZipFile, signature)
         signedZipFile
 
