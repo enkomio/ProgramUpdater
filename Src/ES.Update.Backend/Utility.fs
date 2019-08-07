@@ -42,7 +42,7 @@ module Utility =
         use zipArchive = new ZipArchive(zipStream, ZipArchiveMode.Update)
         let zipEntry = zipArchive.CreateEntry("signature")
         use zipEntryStream = zipEntry.Open()
-        let sha1Signature = Encoding.UTF8.GetBytes(sha1(signature))
+        let sha1Signature = sha1Raw(signature)
         zipEntryStream.Write(sha1Signature, 0, sha1Signature.Length)
 
     let removeOldBinaryFiles(timeout: Int32) =

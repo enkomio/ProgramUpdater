@@ -4,6 +4,7 @@ open System
 open System.Net.NetworkInformation
 open System.IO
 open System.Security.Cryptography
+open ES.Update
 
 module internal Utility =
 
@@ -40,15 +41,7 @@ module internal Utility =
     let private decryptKey(data: Byte array) =
         let key = getMacAddresses() |> sha256
         let iv = getHardDiskSerials()
-
-        // decrypt
-        use aes = new AesManaged(Key = key, IV = iv, Padding = PaddingMode.ISO10126)
-        use ms = new MemoryStream(data)
-        use resultStream = new MemoryStream()
-        use sr = new CryptoStream(ms, aes.CreateDecryptor(), CryptoStreamMode.Read)
-        sr.CopyTo(resultStream)
-        sr.Close()
-        resultStream.ToArray()
+        Utility.decrypt(data, key, iv)
 
     let createEncryptionKeys() =        
         use key =
