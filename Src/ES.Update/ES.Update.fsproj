@@ -43,7 +43,7 @@
   <ItemGroup>
     <Content Include="packages.config" />
     <Compile Include="AssemblyInfo.fs" />
-    <Compile Include="Utility.fs" />
+    <Compile Include="CryptoUtility.fs" />
     <Compile Include="Updater.fs" />
   </ItemGroup>
   <ItemGroup>
