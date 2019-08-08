@@ -21,13 +21,9 @@ module internal Utility =
         DriveInfo.GetDrives()
         |> Array.filter(fun drive -> drive.IsReady)
         |> Array.collect(fun drive -> drive.RootDirectory.CreationTime.ToBinary() |> BitConverter.GetBytes)
-
-    let private sha256(content: Byte array) =
-        use sha = SHA256.Create()
-        sha.ComputeHash(content)
-
+        
     let encryptKey(data: Byte array) =
-        let key = getMacAddresses() |> sha256
+        let key = getMacAddresses() |> sha256Raw
         let iv = getHardDiskSerials()
 
         // encrypt
@@ -39,7 +35,7 @@ module internal Utility =
         ms.ToArray()
 
     let private decryptKey(data: Byte array) =
-        let key = getMacAddresses() |> sha256
+        let key = getMacAddresses() |> sha256Raw
         let iv = getHardDiskSerials()
         Utility.decrypt(data, key, iv)
 

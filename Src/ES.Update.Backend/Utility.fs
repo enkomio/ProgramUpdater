@@ -20,7 +20,7 @@ module Utility =
     let private sign(data: String, clientKey: String, iv: String, privateKey: String) =
         let key = getEncryptionKey(clientKey, privateKey)
         let iv = Convert.FromBase64String(iv)
-        let signature = sha1Raw(Encoding.UTF8.GetBytes(data))
+        let signature = sha256Raw(Encoding.UTF8.GetBytes(data))
         encrypt(signature, key, iv)
 
     let private readIntegrityInfo(zipFile: String) = 

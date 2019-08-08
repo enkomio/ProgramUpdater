@@ -52,7 +52,7 @@ module MetadataBuilder =
             use zipStream = zipEntry.Open()
             use memStream = new MemoryStream()
             zipStream.CopyTo(memStream)
-            (zipEntry.FullName, sha1(memStream.ToArray()))
+            (zipEntry.FullName, sha256(memStream.ToArray()))
         )
 
     let private saveApplicationMetadata(workingDirectory: String, releaseFile: String, files: (String * String) seq) =
