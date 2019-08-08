@@ -4,7 +4,7 @@ open System
 open System.IO
 open System.Collections.Generic
 
-type UpdateService(workspaceDirectory: String, privateKey: String) =
+type UpdateService(workspaceDirectory: String, privateKey: Byte array) =
     let _lock = new Object()
     let _updateManagers = new Dictionary<String, UpdateManager>()
 

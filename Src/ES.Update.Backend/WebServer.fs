@@ -14,7 +14,7 @@ open Suave.Filters
 open Suave.Files
 open ES.Fslog
 
-type WebServer(binding: String, workspaceDirectory: String, privateKey: String, logProvider: ILogProvider) as this =
+type WebServer(binding: Uri, workspaceDirectory: String, privateKey: Byte array, logProvider: ILogProvider) as this =
     let _shutdownToken = new CancellationTokenSource()
     let _updateService = new UpdateService(workspaceDirectory, privateKey)
     let _logger = new WebServerLogger()
@@ -68,13 +68,14 @@ type WebServer(binding: String, workspaceDirectory: String, privateKey: String, 
         then webPart ctx
         else FORBIDDEN "Forbidden" ctx
 
-    let buildCfg(uriString: String) = 
-        let uri = new UriBuilder(uriString)
+    let buildCfg(uri: Uri) = 
         { defaultConfig with
             bindings = [HttpBinding.create HTTP (IPAddress.Parse uri.Host) (uint16 uri.Port)]
             listenTimeout = TimeSpan.FromMilliseconds (float 10000)
             cancellationToken = _shutdownToken.Token
         }
+
+    new (binding: Uri, workspaceDirectory: String, privateKey: Byte array) = new WebServer(binding, workspaceDirectory, privateKey, new LogProvider())
 
     abstract GetRoutes: String -> WebPart list
     default this.GetRoutes(prefix: String) = [

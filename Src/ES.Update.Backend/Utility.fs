@@ -41,7 +41,7 @@ module Utility =
                     File.Delete(file)
             )
 
-    let addSignature(zipFile: String, privateKey: String) =
+    let addSignature(zipFile: String, privateKey: Byte array) =
         // create signed zip file
         let tempPath = Path.Combine(Path.GetTempPath(), "UpdateBinaries")
         Directory.CreateDirectory(tempPath) |> ignore
@@ -58,7 +58,7 @@ module Utility =
 
         // compute signature and add it to the new file
         let integrityInfo = readIntegrityInfo(zipFile)
-        let signature = CryptoUtility.sign(Encoding.UTF8.GetBytes(integrityInfo), Convert.FromBase64String(privateKey))
+        let signature = CryptoUtility.sign(Encoding.UTF8.GetBytes(integrityInfo), privateKey)
         addSignatureEntry(signedZipFile, signature)
         signedZipFile
 
