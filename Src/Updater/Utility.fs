@@ -4,7 +4,7 @@ open System
 open System.Reflection
 open System.IO
 
-module Utility =
+module internal Utility =
     let readCurrentVersion() =
         let versionFile = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "version.txt")
         let currentVersion = ref(new Version())

@@ -123,9 +123,9 @@ module Program =
                 else
                     let server = 
                         new WebServer(
-                            settings.BindingAddress, 
+                            new Uri(settings.BindingAddress), 
                             settings.WorkspaceDirectory, 
-                            settings.PrivateKey, 
+                            settings.PrivateKey |> Convert.FromBase64String,
                             logProvider
                         )
                     server.Start()       

@@ -55,7 +55,7 @@ module Program =
 
     let private doUpdate(currentVersion: Version) =
         let settings = Settings.Read()
-        let updater = new Updater(new Uri(settings.UpdateBaseUri), settings.ProjectName, currentVersion, settings.ServerPublicKey)
+        let updater = new Updater(new Uri(settings.UpdateBaseUri), settings.ProjectName, currentVersion, Convert.FromBase64String(settings.ServerPublicKey))
         let latestVersion = updater.GetLatestVersion()
         
         if latestVersion > currentVersion then
