@@ -4,6 +4,9 @@ open System
 open System.Net
 open System.Security.Cryptography
 open System.IO
+open System.IO.Compression
+open System.Text
+open System.Linq
 
 type Updater(serverUri: Uri, projectName: String, currentVersion: Version, serverPublicKey: String) =
     let generateEncryptionKey() =
@@ -50,10 +53,31 @@ type Updater(serverUri: Uri, projectName: String, currentVersion: Version, serve
         with _ ->
             false
 
+    let readEntry(zipArchive: ZipArchive, name: String) =
+        let entry =
+            zipArchive.Entries
+            |> Seq.find(fun entry -> entry.FullName.Equals(name, StringComparison.OrdinalIgnoreCase))
+        
+        use zipStream = entry.Open()
+        use memStream = new MemoryStream()
+        zipStream.CopyTo(memStream)
+        memStream.ToArray()
+
+    let checkIntegrity(zipArchive: ZipArchive, sharedKey: Byte array, iv: Byte array) =
+        let signature = CryptoUtility.decrypt(readEntry(zipArchive, "signature"), sharedKey, iv)
+        let computedSignature = sha256Raw(readEntry(zipArchive, "catalog"))
+        Enumerable.SequenceEqual(signature, computedSignature)
+            
     member this.InstallUpdates(updateFile: String, sharedKey: Byte array, iv: Byte array) =
-        // TODO
-        // 
-        ()
+        use zipStream = File.OpenRead(updateFile)
+        use zipArchive = new ZipArchive(zipStream, ZipArchiveMode.Read)
+        let fileList = Encoding.UTF8.GetString(readEntry(zipArchive, "catalog"))
+        if checkIntegrity(zipArchive, sharedKey, iv) then
+            // check signature 
+            // start copy files and check integrity after copy. If fails delete all copied file
+            Ok ()
+        else
+            Error "Integrity check failed"
 
     member this.GetLatestVersion() =
         let path = String.Format("/latest?project={0}", projectName)
@@ -70,6 +94,9 @@ type Updater(serverUri: Uri, projectName: String, currentVersion: Version, serve
 
         // generate keys, download updates and install them
         let (sharedKey, iv, clientPublicKey) = generateEncryptionKey()
-        if File.Exists(resultFile) || downloadUpdates(clientPublicKey, iv, resultFile) then
-            this.InstallUpdates(resultFile, sharedKey, iv)
+        if downloadUpdates(clientPublicKey, iv, resultFile) then
+            let result = this.InstallUpdates(resultFile, sharedKey, iv)
             File.Delete(resultFile)
+            result
+        else
+            Error "Unable to download updates"
