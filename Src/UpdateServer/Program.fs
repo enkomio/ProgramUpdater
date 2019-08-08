@@ -10,6 +10,8 @@ open ES.Fslog.TextFormatters
 open ES.Update.Backend
 
 module Program =
+    open ES.Update
+
     type CLIArguments =
         | Export_Key of file:String
         | Import_Key of file:String
@@ -63,8 +65,8 @@ module Program =
     let private getKeyFileNames() =
         let curDir = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location)
         (
-            Path.Combine(curDir, "private.bin"),
-            Path.Combine(curDir, "public.bin")
+            Path.Combine(curDir, "private.txt"),
+            Path.Combine(curDir, "public.txt")
         )
 
     let private createEncryptionKeys(settings: Settings) =
@@ -72,9 +74,9 @@ module Program =
 
         if not(File.Exists(privateFile)) || not(File.Exists(publicFile)) then
             _logger?CreateKeys()
-            let (privateKey, publicKey) = Utility.createEncryptionKeys()                    
-            File.WriteAllText(privateFile, privateKey)
-            File.WriteAllText(publicFile, publicKey)
+            let (privateKey, publicKey) = CryptoUtility.generateKeys()                  
+            File.WriteAllText(privateFile, privateKey |> Utility.encryptKey |> Convert.ToBase64String)
+            File.WriteAllText(publicFile, publicKey |> Convert.ToBase64String)
             _logger?KeysCreated()
         
         // read keys
