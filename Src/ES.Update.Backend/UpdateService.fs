@@ -44,7 +44,7 @@ type UpdateService(workspaceDirectory: String, privateKey: String) =
     member this.IsValidProject(projectName: String) =
         _updateManagers.ContainsKey(projectName)
 
-    member this.GetUpdates(version: Version, projectName: String, clientKey: String, clientIv: String) =
+    member this.GetUpdates(version: Version, projectName: String) =
         let updateManager = getUpdateManager(projectName)
             
         // compute zip filename
@@ -65,4 +65,4 @@ type UpdateService(workspaceDirectory: String, privateKey: String) =
 
         // add signature to zip file
         removeOldBinaryFiles(this.CacheCleanupSecondsTimeout)
-        addSignature(zipFile, clientKey, clientIv, privateKey)
+        addSignature(zipFile, privateKey)

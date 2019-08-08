@@ -46,14 +46,14 @@ type WebServer(binding: String, workspaceDirectory: String, privateKey: String, 
         
     let updates(ctx: HttpContext) =
         let inputVersion = ref(new Version())
-        match tryGetPostParameters(["version"; "key"; "iv"; "project"], ctx) with
+        match tryGetPostParameters(["version"; "project"], ctx) with
         | Some values 
             when 
                 Version.TryParse(values.["version"], inputVersion) 
                 && _updateService.IsValidProject(values.["project"]) 
             ->
             
-            let signedZip = _updateService.GetUpdates(!inputVersion, values.["project"], values.["key"], values.["iv"])
+            let signedZip = _updateService.GetUpdates(!inputVersion, values.["project"])
 
             // send the update zip file
             addHeader "Content-Type" "application/octet-stream"
