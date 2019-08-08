@@ -105,6 +105,7 @@ type MetadataBuilder(workingDirectory: String, patternsToExclude: List<String>, 
                 File.WriteAllBytes(filename, readZipEntryContent(name, entries))
         )
 
+    new(workingDirectory: String) = new MetadataBuilder(workingDirectory, new List<String>())
     new(workingDirectory: String, patternsToExclude: List<String>) = new MetadataBuilder(workingDirectory, patternsToExclude, new LogProvider())
 
     member this.CreateReleaseMetadata(releaseFile: String) =
