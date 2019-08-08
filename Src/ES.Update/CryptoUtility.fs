@@ -7,6 +7,7 @@ open System.IO
 [<AutoOpen>]
 module CryptoUtility =
 
+    [<CompiledName("GenerateKeys")>]
     let generateKeys() =
         use dsa = new ECDsaCng(HashAlgorithm = CngAlgorithm.Sha256)
         let publicKey = dsa.Key.Export(CngKeyBlobFormat.EccPublicBlob)

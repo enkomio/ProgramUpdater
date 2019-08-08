@@ -8,7 +8,7 @@ open System.IO.Compression
 open System.Text
 open System.Linq
 
-type Updater(serverUri: Uri, projectName: String, currentVersion: Version, serverPublicKey: String) =
+type Updater(serverUri: Uri, projectName: String, currentVersion: Version, serverPublicKey: Byte array) =
     let generateEncryptionKey() =
         use client =
             new ECDiffieHellmanCng(
@@ -17,7 +17,7 @@ type Updater(serverUri: Uri, projectName: String, currentVersion: Version, serve
             )            
         
         // generate keys
-        let sharedKey = client.DeriveKeyMaterial(CngKey.Import(Convert.FromBase64String(serverPublicKey), CngKeyBlobFormat.EccPublicBlob))
+        let sharedKey = client.DeriveKeyMaterial(CngKey.Import(serverPublicKey, CngKeyBlobFormat.EccPublicBlob))
         use aes = new AesManaged(Key = sharedKey)
         let clientPublicKey = Convert.ToBase64String(client.PublicKey.ToByteArray())
 
