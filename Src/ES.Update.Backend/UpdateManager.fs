@@ -20,7 +20,7 @@ type UpdateManager(workingDirectory: String) =
                             File.ReadAllLines(fileName)
                             |> Array.map(fun line -> line.Trim().Split(','))
                             |> Array.map(fun items -> (items.[0], String.Join(",", items.[1..])))
-                            |> Array.map(fun (sha1, path) -> {Sha1 = sha1; Path = path})
+                            |> Array.map(fun (hashValue, path) -> {ContentHash = hashValue; Path = path})
                     }
                 )
 
@@ -34,7 +34,7 @@ type UpdateManager(workingDirectory: String) =
             watcher.EnableRaisingEvents <- true
 
     let getApplicationHashes(application: Application) =
-        application.Files |> Array.map(fun file -> file.Sha1)
+        application.Files |> Array.map(fun file -> file.ContentHash)
 
     let getVersionHashes(version: Version) =
         match _applications |> Seq.tryFind(fun app -> app.Version = version) with
@@ -49,7 +49,7 @@ type UpdateManager(workingDirectory: String) =
     let mapHashToFile(hashes: String seq) = [
         let allFiles = _applications |> Seq.collect(fun app -> app.Files)
         for hash in hashes do
-            yield (allFiles |> Seq.find(fun file -> file.Sha1 = hash))
+            yield (allFiles |> Seq.find(fun file -> file.ContentHash = hash))
     ]
 
     let getFiles(hashes: String seq) =
@@ -62,9 +62,9 @@ type UpdateManager(workingDirectory: String) =
         |> List.map(fun file ->
             let version =
                 allFiles 
-                |> Array.find(fun f -> Path.GetFileNameWithoutExtension(f).Equals(file.Sha1, StringComparison.OrdinalIgnoreCase))
+                |> Array.find(fun f -> Path.GetFileNameWithoutExtension(f).Equals(file.ContentHash, StringComparison.OrdinalIgnoreCase))
                 |> Path.GetDirectoryName
-            let fileName = Path.Combine(fileBucketDirectory, version, file.Sha1)
+            let fileName = Path.Combine(fileBucketDirectory, version, file.ContentHash)
             (file, File.ReadAllBytes(fileName))
         )
 
@@ -91,6 +91,6 @@ type UpdateManager(workingDirectory: String) =
     default this.ComputeIntegrityInfo(files: File list) =
         let fileContent = new StringBuilder()        
         files |> List.iter(fun file ->
-            fileContent.AppendFormat("{0},{1}", file.Sha1, file.Path).AppendLine() |> ignore
+            fileContent.AppendFormat("{0},{1}", file.ContentHash, file.Path).AppendLine() |> ignore
         )
         fileContent.ToString()

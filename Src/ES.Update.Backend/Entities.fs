@@ -5,7 +5,7 @@ open System
 module Entities =
     type File = {
         Path: String
-        Sha1: String
+        ContentHash: String
     }
 
     type Application = {
