@@ -42,7 +42,7 @@ module CryptoUtility =
     let encrypt(data: Byte array, key: Byte array, iv: Byte array) =
         use aes = new AesManaged(Key = key, IV = iv, Padding = PaddingMode.ISO10126)
         use ms = new MemoryStream()
-        use sw = new StreamWriter(new CryptoStream(ms, aes.CreateEncryptor(), CryptoStreamMode.Write))
-        sw.Write(data)
+        use sw = new CryptoStream(ms, aes.CreateEncryptor(), CryptoStreamMode.Write)
+        sw.Write(data, 0, data.Length)
         sw.Close()
         ms.ToArray()

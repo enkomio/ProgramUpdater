@@ -11,26 +11,14 @@ open ES.Update
 
 [<AutoOpen>]
 module Utility =
-    let private getEncryptionKey(clientKey: String, privateKey: String) =
-        let publicBytes = Convert.FromBase64String(clientKey)
-        let privateBytes = Convert.FromBase64String(privateKey)
-        use cng = new ECDiffieHellmanCng(CngKey.Import(privateBytes, CngKeyBlobFormat.EccPrivateBlob, CngProvider.MicrosoftSoftwareKeyStorageProvider))
-        cng.DeriveKeyMaterial(CngKey.Import(publicBytes, CngKeyBlobFormat.EccPublicBlob))
-
-    let private sign(data: String, clientKey: String, iv: String, privateKey: String) =
-        let key = getEncryptionKey(clientKey, privateKey)
-        let iv = Convert.FromBase64String(iv)
-        let signature = sha256Raw(Encoding.UTF8.GetBytes(data))
-        encrypt(signature, key, iv)
-
     let private readIntegrityInfo(zipFile: String) = 
         use zipStream = File.OpenRead(zipFile)
         use zipArchive = new ZipArchive(zipStream, ZipArchiveMode.Read)
-        let sha1Entry =
+        let catalogEntry =
             zipArchive.Entries
-            |> Seq.find(fun entry -> entry.FullName.Equals("sha1", StringComparison.OrdinalIgnoreCase))
+            |> Seq.find(fun entry -> entry.FullName.Equals("catalog", StringComparison.OrdinalIgnoreCase))
         
-        use zipStream = sha1Entry.Open()
+        use zipStream = catalogEntry.Open()
         use memStream = new MemoryStream()
         zipStream.CopyTo(memStream)
         Encoding.UTF8.GetString(memStream.ToArray())
@@ -53,7 +41,7 @@ module Utility =
                     File.Delete(file)
             )
 
-    let addSignature(zipFile: String, clientkey: String, iv: String, privateKey: String) =
+    let addSignature(zipFile: String, privateKey: String) =
         // create signed zip file
         let tempPath = Path.Combine(Path.GetTempPath(), "UpdateBinaries")
         Directory.CreateDirectory(tempPath) |> ignore
@@ -70,7 +58,7 @@ module Utility =
 
         // compute signature and add it to the new file
         let integrityInfo = readIntegrityInfo(zipFile)
-        let signature = sign(integrityInfo, clientkey, iv, privateKey)        
+        let signature = CryptoUtility.sign(Encoding.UTF8.GetBytes(integrityInfo), Convert.FromBase64String(privateKey))
         addSignatureEntry(signedZipFile, signature)
         signedZipFile
 
@@ -79,8 +67,8 @@ module Utility =
         use zipArchive = new ZipArchive(zipStream, ZipArchiveMode.Create)
 
         // add integrity info and files
-        let files = files |> List.map(fun (f, c) -> (f.Sha1, c))
-        ("sha1", integrityInfo |> Encoding.UTF8.GetBytes)::files
+        let files = files |> List.map(fun (f, c) -> (f.ContentHash, c))
+        ("catalog", integrityInfo |> Encoding.UTF8.GetBytes)::files
         |> List.iter(fun (name, content) ->
             let zipEntry = zipArchive.CreateEntry(name)
             use zipEntryStream = zipEntry.Open()
