@@ -54,7 +54,6 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <Compile Include="Settings.fs" />
-    <Compile Include="MetadataBuilder.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>
@@ -76,6 +75,11 @@
   </Target>
   -->
   <ItemGroup>
+    <ProjectReference Include="..\ES.Update.Releaser\ES.Update.Releaser.fsproj">
+      <Name>ES.Update.Releaser</Name>
+      <Project>{ca7fe3a0-5d63-40d0-8234-354137d41144}</Project>
+      <Private>True</Private>
+    </ProjectReference>
     <ProjectReference Include="..\ES.Update\ES.Update.fsproj">
       <Name>ES.Update</Name>
       <Project>{b68eadf0-b0db-46a6-949a-9133cabb067a}</Project>

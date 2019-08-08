@@ -9,6 +9,8 @@ open ES.Fslog.Loggers
 open ES.Fslog.TextFormatters
 
 module Program =
+    open ES.Update.Releaser
+
     type CLIArguments =
         | [<MainCommand; Last>] File of file:String   
         | Working_Dir of path:String
@@ -61,8 +63,8 @@ module Program =
                 let workingDir = results.GetResult(<@ Working_Dir @>, Settings.Read().WorkspaceDirectory)
                 Directory.CreateDirectory(workingDir) |> ignore
                 let filename = results.GetResult(<@ File @>)
-                let logProvider = createLogProvider()
-                MetadataBuilder.createReleaseMetadata(workingDir, filename, logProvider)                
+                let metadataBuilder = new MetadataBuilder(workingDir, Settings.Read().PatternToExclude, createLogProvider())
+                metadataBuilder.CreateReleaseMetadata(filename)
                 0
         with 
             | :? ArguParseException ->

@@ -1,6 +1,7 @@
-﻿namespace VersionReleaser
+﻿namespace ES.Update.Releaser
 
 open System
+open System.Collections.Generic
 open System.IO
 open System.Text
 open System.Text.RegularExpressions
@@ -8,25 +9,25 @@ open System.IO.Compression
 open ES.Fslog
 open ES.Update
 
-module MetadataBuilder =
-    let private _logger =
+type MetadataBuilder(workingDirectory: String, patternsToExclude: List<String>, logProvider: ILogProvider) =
+    let _logger =
         log "MetadataBuilder"
         |> info "AnalyzeReleaseFile" "Analyze release file: {0}"
         |> info "SaveMetadata" "Saving release metadata"
         |> info "SavingFiles" "Saving artifacts to update"
         |> info "SavingFile" "Adding new file '{0}' as {1}"
         |> info "Completed" "Process completed"
-        |> build
+        |> buildAndAdd logProvider
 
-    let private extractProjectName(releaseFile: String) =        
+    let extractProjectName(releaseFile: String) =        
         let m = Regex.Match(releaseFile |> Path.GetFileName, "(.+?)[0-9]+(\.[0-9]+)+")
         m.Groups.[1].Value.Trim('v').Trim('.')
 
-    let private extractVersion(releaseFile: String) =
+    let extractVersion(releaseFile: String) =
         let m = Regex.Match(releaseFile |> Path.GetFileName, "[0-9]+(\.[0-9]+)+")
         m.Value |> Version.Parse
 
-    let private readZipEntryContent(name: String, entries: ZipArchiveEntry seq) =
+    let readZipEntryContent(name: String, entries: ZipArchiveEntry seq) =
         let zipEntry = 
             entries
             |> Seq.find(fun entry -> entry.FullName.Equals(name, StringComparison.OrdinalIgnoreCase))
@@ -36,8 +37,7 @@ module MetadataBuilder =
         zipStream.CopyTo(memStream)
         memStream.ToArray()
 
-    let private getVersionFilesSummary(releaseFile: String) =
-        let patternsToExclude = VersionReleaser.Settings.Read().PatternToExclude
+    let getVersionFilesSummary(releaseFile: String) =
         use fileHandle = File.OpenRead(releaseFile)
         
         // inspect zip
@@ -52,10 +52,10 @@ module MetadataBuilder =
             use zipStream = zipEntry.Open()
             use memStream = new MemoryStream()
             zipStream.CopyTo(memStream)
-            (zipEntry.FullName, sha256(memStream.ToArray()))
+            (zipEntry.FullName, CryptoUtility.sha256(memStream.ToArray()))
         )
 
-    let private saveApplicationMetadata(workingDirectory: String, releaseFile: String, files: (String * String) seq) =
+    let saveApplicationMetadata(workingDirectory: String, releaseFile: String, files: (String * String) seq) =
         let fileContent = new StringBuilder()        
         files |> Seq.iter(fun (name, hashValue) ->
             fileContent.AppendFormat("{0},{1}", hashValue, name).AppendLine() |> ignore
@@ -67,7 +67,7 @@ module MetadataBuilder =
         let filename = Path.Combine(versionsDirectory, String.Format("{0}.txt", extractVersion(releaseFile)))
         File.WriteAllText(filename, fileContent.ToString())
 
-    let private getAllHashPerVersion(workingDirectory: String) =
+    let getAllHashPerVersion(workingDirectory: String) =
         Directory.GetFiles(Path.Combine(workingDirectory, "Versions"))
         |> Array.map(fun filename ->
             (
@@ -76,7 +76,7 @@ module MetadataBuilder =
             )
         )
 
-    let private saveFilesContent(workingDirectory: String, releaseFile: String, files: (String * String) seq) =
+    let saveFilesContent(workingDirectory: String, releaseFile: String, files: (String * String) seq) =
         let releaseVersion = extractVersion(releaseFile).ToString()
         let fileBucketDir = Path.Combine(workingDirectory, "FileBucket", releaseVersion)
         Directory.CreateDirectory(fileBucketDir) |> ignore
@@ -93,7 +93,7 @@ module MetadataBuilder =
 
         // open the zip file again
         use fileHandle = File.OpenRead(releaseFile)
-        let entries = (new System.IO.Compression.ZipArchive(fileHandle, ZipArchiveMode.Read)).Entries
+        let entries = (new ZipArchive(fileHandle, ZipArchiveMode.Read)).Entries
 
         // save the new files
         files 
@@ -105,8 +105,9 @@ module MetadataBuilder =
                 File.WriteAllBytes(filename, readZipEntryContent(name, entries))
         )
 
-    let createReleaseMetadata(workingDirectory: String, releaseFile: String, logProvider: ILogProvider) =
-        logProvider.AddLogSourceToLoggers(_logger)
+    new(workingDirectory: String, patternsToExclude: List<String>) = new MetadataBuilder(workingDirectory, patternsToExclude, new LogProvider())
+
+    member this.CreateReleaseMetadata(releaseFile: String) =
         _logger?AnalyzeReleaseFile(Path.GetFileName(releaseFile))
         let files = getVersionFilesSummary(releaseFile)
         let projectWorkspace = Path.Combine(workingDirectory, extractProjectName(releaseFile))
@@ -118,3 +119,4 @@ module MetadataBuilder =
         saveFilesContent(projectWorkspace, releaseFile, files)
         
         _logger?Completed()
+        ()
