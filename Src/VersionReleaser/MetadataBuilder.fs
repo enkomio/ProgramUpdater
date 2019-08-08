@@ -57,8 +57,8 @@ module MetadataBuilder =
 
     let private saveApplicationMetadata(workingDirectory: String, releaseFile: String, files: (String * String) seq) =
         let fileContent = new StringBuilder()        
-        files |> Seq.iter(fun (name, sha1) ->
-            fileContent.AppendFormat("{0},{1}", sha1, name).AppendLine() |> ignore
+        files |> Seq.iter(fun (name, hashValue) ->
+            fileContent.AppendFormat("{0},{1}", hashValue, name).AppendLine() |> ignore
         )
 
         // save the content
@@ -82,14 +82,14 @@ module MetadataBuilder =
         Directory.CreateDirectory(fileBucketDir) |> ignore
 
         // compute the new files that must be copied
-        let allSha1Files = 
+        let allHashFiles = 
             getAllHashPerVersion(workingDirectory) 
             |> Array.filter(fun (version, _) -> version.Equals(releaseVersion, StringComparison.OrdinalIgnoreCase) |> not)
             |> Array.collect(snd) 
             |> Set.ofArray
 
-        let allVersionSha1 = files |> Seq.map(fun (_, sha1) -> sha1) |> Set.ofSeq
-        let newSha1Files = Set.difference allVersionSha1 allSha1Files
+        let allVersionHash = files |> Seq.map(fun (_, h) -> h) |> Set.ofSeq
+        let newHashFiles = Set.difference allVersionHash allHashFiles
 
         // open the zip file again
         use fileHandle = File.OpenRead(releaseFile)
@@ -97,11 +97,11 @@ module MetadataBuilder =
 
         // save the new files
         files 
-        |> Seq.filter(fun (_, sha1) -> newSha1Files.Contains(sha1) )
-        |> Seq.iter(fun (name, sha1) ->
-            let filename = Path.Combine(fileBucketDir, sha1)
+        |> Seq.filter(fun (_, hashValue) -> newHashFiles.Contains(hashValue) )
+        |> Seq.iter(fun (name, hashValue) ->
+            let filename = Path.Combine(fileBucketDir, hashValue)
             if not(File.Exists(filename)) then
-                _logger?SavingFile(name, sha1)
+                _logger?SavingFile(name, hashValue)
                 File.WriteAllBytes(filename, readZipEntryContent(name, entries))
         )
 
