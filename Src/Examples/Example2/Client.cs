@@ -11,10 +11,10 @@ namespace Example2
 {
     public class Client
     {
-        public void Run(Server server)
+        public void Run(Server server, String destinationDirectory)
         {
-            var myVersion = new Version(3, 0);
-            var updater = new Updater(server.BindingUri, "MyApplication", myVersion, server.PublicKey);
+            var myVersion = new Version(3, 0);            
+            var updater = new Updater(server.BindingUri, "MyApplication", myVersion, destinationDirectory, server.PublicKey);
             var latestVersion = updater.GetLatestVersion();
             Console.WriteLine("My version: {0}. Latest version: {1}", myVersion, latestVersion);
             if (latestVersion > myVersion)
@@ -23,8 +23,7 @@ namespace Example2
                 var updateResult = updater.Update(myVersion);
                 if (updateResult.Success)
                 {                    
-                    var currentDir = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
-                    var fileContent = File.ReadAllText(Path.Combine(currentDir, "file9.txt"));
+                    var fileContent = File.ReadAllText(Path.Combine(destinationDirectory, "folder", "file8.txt"));
                     Console.WriteLine("Update installed correctly! Content: {0}", fileContent);
                 }
                 else

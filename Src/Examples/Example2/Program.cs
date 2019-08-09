@@ -26,19 +26,20 @@ namespace Example2
             });
         }
 
-        private static void RunClient()
+        private static void RunClient(String destinationDirectory)
         {
             var client = new Client();
-            client.Run(_server);
+            client.Run(_server, destinationDirectory);
         }
         
         static void Main(string[] args)
         {
-            var workspaceDirectory = Helpers.CreateEnvironment();
+            var (workspaceDirectory, destinationDirectory) = Helpers.CreateEnvironment();            
             var wait = new ManualResetEventSlim();
             RunServer(workspaceDirectory, wait);
             wait.Wait();
-            RunClient();
+            RunClient(destinationDirectory);
+
         }
     }
 }

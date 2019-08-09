@@ -20,7 +20,7 @@ namespace Example2
         public Server(String workspaceDirectory)
         {
             this.WorkspaceDirectory = workspaceDirectory;
-            var (privateKey, publicKey) = CryptoUtility.GenerateKeys();
+            var (publicKey, privateKey) = CryptoUtility.GenerateKeys();
             this.PublicKey = publicKey;
 
             var rnd = new Random();

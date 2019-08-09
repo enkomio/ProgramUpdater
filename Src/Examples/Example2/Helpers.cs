@@ -11,15 +11,19 @@ namespace Example2
 {
     internal static class Helpers
     {
-        private static void CreateFakeReleaseFile(String fileName, Int32 numberOfFiles)
+        private static void CreateFakeReleaseFile(String fileName, Int32 numberOfItems)
         {
             using (var fileHandle = File.OpenWrite(fileName))
             using (var zipArchive = new ZipArchive(fileHandle, ZipArchiveMode.Create))
             {
-                for (var i=0; i<numberOfFiles; i++)
+                for (var i = 0; i < numberOfItems; i++)
                 {
-                    var entryName = String.Format("file{0}.txt", i);
-                    var entryContent = Encoding.UTF8.GetBytes(String.Format("Content of file numner: {0}", i));
+                    var entryName = 
+                        (i > numberOfItems / 2) ?
+                        Path.Combine("folder", String.Format("file{0}.txt", i)):
+                        String.Format("file{0}.txt", i);
+
+                    var entryContent = Encoding.UTF8.GetBytes(String.Format("Content of file: {0}", entryName));
                     var entry = zipArchive.CreateEntry(entryName);
                     using (var entryStream = entry.Open())
                     {
@@ -29,14 +33,23 @@ namespace Example2
             }
         }
 
-        public static String CreateEnvironment()
+        public static (String, String) CreateEnvironment()
         {
+            // create dirs
             var workspaceDirectory = Path.Combine(Path.GetTempPath(), "TEST_ProgramUpdater_Example2");
             if (Directory.Exists(workspaceDirectory))
             {
                 Directory.Delete(workspaceDirectory, true);
             }
             Directory.CreateDirectory(workspaceDirectory);
+
+            var destinationDirectory = Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), "MyApplication");
+            if (Directory.Exists(destinationDirectory))
+            {
+                Directory.Delete(destinationDirectory, true);
+            }
+            Directory.CreateDirectory(destinationDirectory);
+
             var metadataBuilder = new MetadataBuilder(workspaceDirectory);
 
             // create some fake zip File
@@ -49,7 +62,7 @@ namespace Example2
                 File.Delete(fileName);
             }
 
-            return workspaceDirectory;
+            return (workspaceDirectory, destinationDirectory);
         }
     }
 }
