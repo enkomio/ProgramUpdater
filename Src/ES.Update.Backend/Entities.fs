@@ -3,6 +3,8 @@
 open System
 
 module Entities =
+    let DefaultVersion = "0.0"
+
     type File = {
         Path: String
         ContentHash: String

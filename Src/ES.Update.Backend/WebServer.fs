@@ -40,9 +40,9 @@ type WebServer(binding: Uri, workspaceDirectory: String, privateKey: Byte array,
         | Choice1Of2 projectName ->
             match _updateService.GetLatestVersion(projectName) with
             | Some version -> OK version ctx
-            | None -> OK "0" ctx
+            | None -> OK Entities.DefaultVersion ctx
         | _ -> 
-            OK "0" ctx
+            OK Entities.DefaultVersion ctx
         
     let updates(ctx: HttpContext) =
         let inputVersion = ref(new Version())

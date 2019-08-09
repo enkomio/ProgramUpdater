@@ -5,7 +5,7 @@ open System.IO
 open System.Collections.Generic
 
 type UpdateService(workspaceDirectory: String, privateKey: Byte array) =
-    let _lock = new Object()
+    let _lock = new Object()    
     let _updateManagers = new Dictionary<String, UpdateManager>()
 
     let getUpdateManager(projectName: String) =
@@ -15,7 +15,7 @@ type UpdateService(workspaceDirectory: String, privateKey: Byte array) =
         let correctInputVersion =
             match updateManager.GetApplication(inputVersion) with
             | Some application-> application.Version.ToString()
-            | None -> "0"
+            | None -> Entities.DefaultVersion
 
         let latestVersion = updateManager.GetLatestVersion().Value.Version.ToString()
         String.Format("{0}-{1}.zip", correctInputVersion, latestVersion)
