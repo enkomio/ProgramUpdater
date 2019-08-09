@@ -24,7 +24,7 @@ namespace Example2
                 if (updateResult.Success)
                 {                    
                     var fileContent = File.ReadAllText(Path.Combine(destinationDirectory, "folder", "file8.txt"));
-                    Console.WriteLine("Update installed correctly! Content: {0}", fileContent);
+                    Console.WriteLine("Update installed correctly! {0}", fileContent);
                 }
                 else
                 {

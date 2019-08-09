@@ -14,8 +14,9 @@ namespace Example2
     {
         private static Server _server = null;
 
-        private static void RunServer(String workspaceDirectory, ManualResetEventSlim wait)
+        private static void RunServer(String workspaceDirectory)
         {
+            var wait = new ManualResetEventSlim();
             Task.Factory.StartNew(() =>
             {
                 using (_server = new Server(workspaceDirectory))
@@ -24,6 +25,8 @@ namespace Example2
                     _server.Start();
                 }
             });
+            wait.Wait();
+            Thread.Sleep(2000);
         }
 
         private static void RunClient(String destinationDirectory)
@@ -34,12 +37,9 @@ namespace Example2
         
         static void Main(string[] args)
         {
-            var (workspaceDirectory, destinationDirectory) = Helpers.CreateEnvironment();            
-            var wait = new ManualResetEventSlim();
-            RunServer(workspaceDirectory, wait);
-            wait.Wait();
+            var (workspaceDirectory, destinationDirectory) = Helpers.CreateEnvironment();
+            RunServer(workspaceDirectory);            
             RunClient(destinationDirectory);
-
         }
     }
 }
