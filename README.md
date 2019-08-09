@@ -23,6 +23,34 @@ Find below some examples that describe how to use the framework.
 
 ### Example 1
 
+The goal of this example is to provide a full update process by only using the commant line utilities. We will suppose that we have four version of our software and we just released a newv version, 5.0. We will use the _update_ directory in order to store the information related to the updates of our software.
+
+#### Step 0 - Start up
+
+If you have never used the framework to provide updates to your clients, is good practice to follow the _Step 1_ for each release of your software, starting from the oldest to the newest.
+
+#### Step 1 - Metadata Creation
+
+The first step is to create the metadata, this is done with the _VersionReleaser.exe_ tool. We run the following command:
+
+	VersionReleaser.exe --working-dir updates Examples\Example1\MyApplication.v5.0.zip
+	-=[ Version Releaser ]=-
+	Copyright (c) 2019 Enkomio
+
+	[INFO] 2019-08-09 19:26:45 - Analyze release file: MyApplication.v5.0.zip
+	[INFO] 2019-08-09 19:26:45 - Saving release metadata
+	[INFO] 2019-08-09 19:26:45 - Saving artifacts to update
+	[INFO] 2019-08-09 19:26:45 - Adding new file 'folder\file8.txt' as 77C6EC70B75CE3254B910DC6073DB04A61E2EB5273191F73B0AB539F6CAD43C2
+	[INFO] 2019-08-09 19:26:45 - Process completed
+	
+Now the metadata are created and the new artifacts are saved.
+
+### Step 2 - Start update server
+
+Now you have to start the update server. You can do this with the following command:
+
+
+
 ### Example 2
 
 ## Security
