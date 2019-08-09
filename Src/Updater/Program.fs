@@ -60,7 +60,7 @@ module Program =
         
         if latestVersion > currentVersion then
             _logger?NewVersion(latestVersion)
-            let updates = updater.GetUpdates(currentVersion)
+            let updates = updater.Update(currentVersion)
             ()
 
     [<EntryPoint>]
