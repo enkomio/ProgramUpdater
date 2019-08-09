@@ -1,15 +1,10 @@
 ﻿using ES.Update;
 using ES.Update.Backend;
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Example2
 {
-    public class Server : IDisposable
+    public class Server
     {
         private WebServer _server = null;
 
@@ -33,12 +28,9 @@ namespace Example2
             _server.Start();
         }
 
-        public void Dispose()
+        public void Stop()
         {
-            if (Directory.Exists(this.WorkspaceDirectory))
-            {
-                Directory.Delete(this.WorkspaceDirectory);
-            }
+            _server.Stop();
         }
     }
 }

@@ -19,11 +19,9 @@ namespace Example2
             var wait = new ManualResetEventSlim();
             Task.Factory.StartNew(() =>
             {
-                using (_server = new Server(workspaceDirectory))
-                {
-                    wait.Set();
-                    _server.Start();
-                }
+                _server = new Server(workspaceDirectory);
+                wait.Set();
+                _server.Start();
             });
             wait.Wait();
             Thread.Sleep(2000);
@@ -40,6 +38,7 @@ namespace Example2
             var (workspaceDirectory, destinationDirectory) = Helpers.CreateEnvironment();
             RunServer(workspaceDirectory);            
             RunClient(destinationDirectory);
+            _server.Stop();
         }
     }
 }
