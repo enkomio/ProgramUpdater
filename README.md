@@ -1,4 +1,4 @@
-# ProgramUpdater
+# Program Updater Framework
 A framework to automatize the process of updating a program in an efficent and secure way. The updates are provided by a server component through and HTTP/HTTPS channel.
 
 It was created in order to be very easy to use and to integrate without sacrifice security.
