@@ -44,6 +44,9 @@
     <Content Include="packages.config" />
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="CryptoUtility.fs" />
+    <Compile Include="Entities.fs" />
+    <Compile Include="Utility.fs" />
+    <Compile Include="Installer.fs" />
     <Compile Include="Updater.fs" />
   </ItemGroup>
   <ItemGroup>
