@@ -50,9 +50,8 @@ namespace Example2
             }
             Directory.CreateDirectory(destinationDirectory);
 
+            // create some fake zip File and build metadata
             var metadataBuilder = new MetadataBuilder(workspaceDirectory);
-
-            // create some fake zip File
             var currentDir = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
             for (var i = 0; i < 5; i++)
             {
