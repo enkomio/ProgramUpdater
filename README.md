@@ -51,9 +51,28 @@ Now the metadata are created and the new artifacts are saved.
 
 ### Step 2 - Start update server
 
-Now you have to start the update server. You can do this with the following command:
+Now you have to start the update server. The framework provides an utility that will run a web server in order to accept update requests. You can do this with the following command:
 
+	UpdateServer.exe --working-dir updates
+	-=[ Version Releaser ]=-
+	Copyright (c) 2019 Enkomio
 
+	[INFO] 2019-08-10 15:06:48 - Encryption keys not found. Generating them
+	[INFO] 2019-08-10 15:06:48 - Encryption keys created and saved to files. The public key must be distributed togheter with the updater
+	[INFO] 2019-08-10 15:06:48 - Public key: RUNTNkIAAAAAOhEpGNVJ7p3RtrhaJG2L+B8Ov4rCjN+DllHhD6Ang3l/ca8YiSCsBFoJD1W0CRsUcbFX3hrEUTmuz7166Ao7e8IBOmLcB1YAPTzKbp5RlQBi4ghvi/pwQChWW5QkWIlZVevwJY1/ghZtfLmCnKZDCiv8pE75QG/lSARKf3otVZXXBKYBRbZMwyWtBUp/sCNS4Dq/0Syi8ssr3XUlpJatmnAguVfKHCe746eVy82alRnT3nepAopYdclFhKdGJxdEBgEd0JM=
+	[INFO] 2019-08-10 15:06:48 - Private key first bytes: RUNTNU
+	[INFO] 2019-08-10 15:06:48 - Loaded project MyApplication version 1.0
+	[INFO] 2019-08-10 15:06:48 - Loaded project MyApplication version 2.0
+	[INFO] 2019-08-10 15:06:48 - Loaded project MyApplication version 3.0
+	[INFO] 2019-08-10 15:06:48 - Loaded project MyApplication version 4.0
+	[INFO] 2019-08-10 15:06:48 - Loaded project MyApplication version 5.0
+	[17:06:48 INF] Smooth! Suave listener started in 86.698ms with binding 127.0.0.1:80
+	
+The server recognized that we defined five applications. It is also very important to take note ofthe *public key*. This value must be set in the update client in order to ensure the integrity of the updates.
+
+### Ste 3 - Run the update client
+
+TODO
 
 ### Example 2
 
