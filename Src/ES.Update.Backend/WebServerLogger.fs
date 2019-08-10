@@ -21,3 +21,7 @@ type WebServerLogger() =
             | (Some printData, HttpMethod.POST) when printData -> tmpData              
             | _  -> String.Empty
         base.WriteLog(1, ip, httpMethod, path, data, ctx.response.status.code)
+
+    [<Log(2, Message = "Loaded project {0} version {1}", Level = LogLevel.Informational)>]
+    member this.VersionInfo(projectName: String, version: Version) =         
+        base.WriteLog(2, projectName, version)

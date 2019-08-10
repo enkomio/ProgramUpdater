@@ -33,6 +33,14 @@ type UpdateService(workspaceDirectory: String, privateKey: Byte array) =
     /// during the update process.
     member val CacheCleanupSecondsTimeout = 24 * 60 * 60 with get, set
 
+    member this.GetAvailableVersions() =
+        _updateManagers 
+        |> Seq.toArray
+        |> Array.collect(fun kv ->
+            kv.Value.GetAvailableVersions() 
+            |> Array.map(fun version -> (kv.Key, version))
+        )
+
     member this.GetLatestVersion(projectName: String) =
         if _updateManagers.ContainsKey(projectName) then
             match getUpdateManager(projectName).GetLatestVersion() with

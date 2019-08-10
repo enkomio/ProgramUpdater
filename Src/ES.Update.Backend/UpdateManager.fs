@@ -68,6 +68,11 @@ type UpdateManager(workingDirectory: String) =
             (file, File.ReadAllBytes(fileName))
         )
 
+    member this.GetAvailableVersions() =
+        _applications 
+        |> Seq.toArray
+        |> Array.map(fun application -> application.Version)
+
     abstract GetApplication: Version -> Application option
     default this.GetApplication(version: Version) =
         _applications |> Seq.tryFind(fun app -> app.Version = version)

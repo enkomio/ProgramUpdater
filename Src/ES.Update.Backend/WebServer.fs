@@ -95,6 +95,9 @@ type WebServer(binding: Uri, workspaceDirectory: String, privateKey: Byte array,
         
     member this.Start() =
         logProvider.AddLogSourceToLoggers(_logger)
+        
+        _updateService.GetAvailableVersions()
+        |> Array.iter(fun (prj, ver) -> _logger.VersionInfo(prj, ver))
 
         // start web server
         let cfg = buildCfg(binding)
