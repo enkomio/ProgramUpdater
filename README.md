@@ -1,7 +1,11 @@
 # Program Updater Framework
 A framework to automatize the process of updating a program in an efficent and secure way. The updates are provided by a server component through and HTTP/HTTPS channel.
 
-It was created in order to be very easy to use and to integrate without sacrifice security.
+It was created with the following intents: 
+
+* to be very easy to use and to integrate 
+* to provide an hish security process
+* to be autoconsistent, you don't need any other external software (web server, database, ...)
 
 ## Usage
 
