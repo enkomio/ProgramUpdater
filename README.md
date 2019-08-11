@@ -49,7 +49,7 @@ The first step is to create the metadata, this is done with the _VersionReleaser
 	
 Now the metadata are created and the new artifacts are saved.
 
-### Step 2 - Start update server
+#### Step 2 - Start update server
 
 Now you have to start the update server. The framework provides an utility that will run a web server in order to accept update requests. You can do this with the following command:
 
@@ -70,9 +70,15 @@ Now you have to start the update server. The framework provides an utility that 
 	
 The server recognized that we defined five applications. It is also very important to take note ofthe *public key*. This value must be set in the update client in order to ensure the integrity of the updates.
 
-### Ste 3 - Run the update client
+#### Ste 3 - Run the update client
 
-TODO
+The final step of this example is to update the client code by connecting to the server. In order to do this, it is necessary to specify the following information:
+
+* The address of the update server
+* The public key of the server
+* The directory where the update must be installed
+
+The first two information can be retrieved from the output of the server in the previous step. For the last information we suppose that is the current directory (a very common case if you distribute the updater program togheter with your binary). You can now run the following command:
 
 ### Example 2
 
