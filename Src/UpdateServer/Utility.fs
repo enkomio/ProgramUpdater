@@ -16,9 +16,12 @@ module internal Utility =
         |> Array.collect(fun ni -> ni.GetPhysicalAddress().GetAddressBytes())
 
     let private getHardDiskSerials() =
-        DriveInfo.GetDrives()
-        |> Array.filter(fun drive -> drive.IsReady)
-        |> Array.collect(fun drive -> drive.RootDirectory.CreationTime.ToBinary() |> BitConverter.GetBytes)
+        let bytes =
+            DriveInfo.GetDrives()
+            |> Array.filter(fun drive -> drive.IsReady)
+            |> Array.collect(fun drive -> drive.RootDirectory.CreationTime.ToBinary() |> BitConverter.GetBytes)        
+            |> sha256Raw
+        Array.sub bytes 0 16 
         
     let encryptKey(data: Byte array) =
         let key = getMacAddresses() |> sha256Raw
