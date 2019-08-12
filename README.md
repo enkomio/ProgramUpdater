@@ -94,7 +94,6 @@ In order to protect the private key from an attacker that is able to read aribra
 	Copyright (c) 2019 Enkomio
 
 	[INFO] 2019-08-09 13:45:18 - Public key: RUNTNkIAAAAAQSTd1xnmvNHa25Z4ENfcXeTlktWZdnABFn/jwcx/KOBX44qZOY/aEp1oXxfhcXZX26Uy5c2P1FZlu5yswPAgqxUBXpxjSyCSYnyKODNpLw0sEqD+L3xcJLIv/3s4vgFaCwIDNiqqn8WWahvsYsu0o41IgMYwjOO4QhsL16Xai+beAEEBBRoWkZJSZR+vB7Vi/Trw7C5kNsPwy5TxK9Fd+ibyrAyewvftI1SWAcEO6OIh9G+bSEkXDPoS77faGYMotbcKhQU=
-	[INFO] 2019-08-09 13:45:18 - Private key first bytes: RUNTNU
 	[INFO] 2019-08-09 13:45:18 - Private key exported to file: clean-private-key.txt
   
 ## Importing private key
