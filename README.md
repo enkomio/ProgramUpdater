@@ -7,7 +7,7 @@ It was created with the following intents:
 * to provide an hish security process
 * to be autoconsistent, you don't need any other external software (web server, database, ...)
 
-## Usage
+# Usage
 
 The framework can be used via the command line tools or by integrating it in your web application. In both case, the step to release a new update is composed of the following three steps:
 
@@ -15,7 +15,7 @@ The framework can be used via the command line tools or by integrating it in you
 * Push the metadata to the update server (this step can be merged with the above one)
 * Run the updated from the client
 
-### Core concepts
+## Core concepts
 
 In order to setup an update process you need:
 
@@ -25,15 +25,15 @@ In order to setup an update process you need:
 
 Find below some examples that describe how to use the framework.
 
-### Example 1
+## Example 1
 
 The goal of this example is to provide a full update process by only using the commant line utilities. We will suppose that we have four version of our software and we just released a newv version, 5.0. We will use the _update_ directory in order to store the information related to the updates of our software.
 
-#### Step 0 - Start up
+### Step 0 - Start up
 
 If you have never used the framework to provide updates to your clients, is good practice to follow the _Step 1_ for each release of your software, starting from the oldest to the newest.
 
-#### Step 1 - Metadata Creation
+### Step 1 - Metadata Creation
 
 The first step is to create the metadata, this is done with the _VersionReleaser.exe_ tool. We run the following command:
 
@@ -70,17 +70,23 @@ Now you have to start the update server. The framework provides an utility that 
 	
 The server recognized that we defined five applications. It is also very important to take note ofthe *public key*. This value must be set in the update client in order to ensure the integrity of the updates.
 
-### Ste 3 - Run the update client
+### Step 3 - Run the update client
 
-TODO
+The final step of this example is to update the client code by connecting to the server. In order to do this, it is necessary to specify the following information:
 
-### Example 2
+* The address of the update server
+* The public key of the server
+* The directory where the update must be installed
 
-## Security
+The first two information can be retrieved from the output of the server in the previous step. For the last information we suppose that is the current directory (a very common case if you distribute the updater program togheter with your binary). You can now run the following command:
+
+## Example 2
+
+# Security
 
 The update process use ECDSA with SHA-256 in order to ensure the integrity of the update. The public and private keys are automatically generated on first start and saved to local files. 
 
-### Exporting private key
+## Exporting private key
 
 In order to protect the private key from an attacker that is able to read aribrary file from your filesystem, the key is AES encrypted with parameters that are related to the execution environment (like MAC address, HD features, ...). This mean that you cannot just copy the private key file from one computer to another, since it will not work. If you want to obtain the clear private key you have to export it by issuing the following command:
 
@@ -92,7 +98,7 @@ In order to protect the private key from an attacker that is able to read aribra
 	[INFO] 2019-08-09 13:45:18 - Private key first bytes: RUNTNU
 	[INFO] 2019-08-09 13:45:18 - Private key exported to file: clean-private-key.txt
   
-### Importing private key
+## Importing private key
 
 If you want to import a private key that was exported from another server you have to run the following command:
 
