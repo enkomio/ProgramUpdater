@@ -60,7 +60,6 @@ Now you have to start the update server. The framework provides an utility that 
 	[INFO] 2019-08-10 15:06:48 - Encryption keys not found. Generating them
 	[INFO] 2019-08-10 15:06:48 - Encryption keys created and saved to files. The public key must be distributed togheter with the updater
 	[INFO] 2019-08-10 15:06:48 - Public key: RUNTNkIAAAAAYstJRqVzhlg42ITZEW0S/VXIfRhNiSnU+5bgRcfaGfOwse9y0ClAgETYVYw+FJWoKBx1EFXcAuNThLtvRh7Eku8BArz6dBqrb75ERmxP8lfhaHCrwtmqy9WpEuitJxCtWQzAHik3dxGpjGbFIcJBiQhS7Xd4qIs5k1Yuplb/c+CDsaAAsTff7gGuWDzXp+0s7z1mzaUk5vZaKDpDbMp67al0dC/kelxzu7WiUeZTxb5zOWgyOL3+mzUQkYJlQf6imocFRnM=
-	[INFO] 2019-08-10 15:06:48 - Private key first bytes: RUNTNU
 	[INFO] 2019-08-10 15:06:48 - Loaded project MyApplication version 1.0
 	[INFO] 2019-08-10 15:06:48 - Loaded project MyApplication version 2.0
 	[INFO] 2019-08-10 15:06:48 - Loaded project MyApplication version 3.0
@@ -107,7 +106,6 @@ If you want to import a private key that was exported from another server you ha
 	Copyright (c) 2019 Enkomio
 
 	[INFO] 2019-08-09 13:47:40 - Public key: RUNTNkIAAAABtk8oMxMbWwWeBVKGckyVK4C9oOdyKSy6/WNG/6763CUEZk+mCf2zgGBViDpPu2N/Crh99rDK2WGsE2b9nYqaq7AA7caRHqcPLXns+aPqjk1teFI9c9+QnU78WOrd2UMKF3CuD2xccvjKATon+3GHBWeJtqZNvXSu8blWmFENmkIMS60BXl2pXb7fPuTXRaSyj6Dtb/IY4CY2rftroIJx1B3g28UHs0cVXWK+pi/DOkWJMb4EspodK9caIjwLxwf1HF3LnVc=
-	[INFO] 2019-08-09 13:47:40 - Private key first bytes: RUNTNU
 	[INFO] 2019-08-09 13:47:41 - Private key from file 'clean-private-key.txt' imported. Be sure to set the public key accordingly.
   
 This command will read and saved the private key in an encrypted form with the new parameters of the new server. You have also to copy to the server the public key.
