@@ -59,7 +59,7 @@ Now you have to start the update server. The framework provides an utility that 
 
 	[INFO] 2019-08-10 15:06:48 - Encryption keys not found. Generating them
 	[INFO] 2019-08-10 15:06:48 - Encryption keys created and saved to files. The public key must be distributed togheter with the updater
-	[INFO] 2019-08-10 15:06:48 - Public key: RUNTNkIAAAAAOhEpGNVJ7p3RtrhaJG2L+B8Ov4rCjN+DllHhD6Ang3l/ca8YiSCsBFoJD1W0CRsUcbFX3hrEUTmuz7166Ao7e8IBOmLcB1YAPTzKbp5RlQBi4ghvi/pwQChWW5QkWIlZVevwJY1/ghZtfLmCnKZDCiv8pE75QG/lSARKf3otVZXXBKYBRbZMwyWtBUp/sCNS4Dq/0Syi8ssr3XUlpJatmnAguVfKHCe746eVy82alRnT3nepAopYdclFhKdGJxdEBgEd0JM=
+	[INFO] 2019-08-10 15:06:48 - Public key: RUNTNkIAAAAAYstJRqVzhlg42ITZEW0S/VXIfRhNiSnU+5bgRcfaGfOwse9y0ClAgETYVYw+FJWoKBx1EFXcAuNThLtvRh7Eku8BArz6dBqrb75ERmxP8lfhaHCrwtmqy9WpEuitJxCtWQzAHik3dxGpjGbFIcJBiQhS7Xd4qIs5k1Yuplb/c+CDsaAAsTff7gGuWDzXp+0s7z1mzaUk5vZaKDpDbMp67al0dC/kelxzu7WiUeZTxb5zOWgyOL3+mzUQkYJlQf6imocFRnM=
 	[INFO] 2019-08-10 15:06:48 - Private key first bytes: RUNTNU
 	[INFO] 2019-08-10 15:06:48 - Loaded project MyApplication version 1.0
 	[INFO] 2019-08-10 15:06:48 - Loaded project MyApplication version 2.0
