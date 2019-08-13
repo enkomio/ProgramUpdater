@@ -9,7 +9,7 @@ It was created with the following intents:
 
 # Usage
 
-The framework can be used via the command line tools or by integrating it in your web application. In both case, the step to release a new update is composed of the following three steps:
+The framework can be used via the command line tools or by integrating it in your web application. In both case, the process to release a new update is composed of the following three steps:
 
 * Create the metadata related to the new update
 * Push the metadata to the update server (this step can be merged with the above one)
@@ -19,23 +19,23 @@ The framework can be used via the command line tools or by integrating it in you
 
 In order to setup an update process you need:
 
-* A folder where are the metadata are saved
-* Following a naming convention for you update file (only zip file are supported for now)
+* A folder where all the metadata are saved
+* To follow a naming convention for your update file (only zip file are supported for now)
 * Generate and distribute the encryption key (this process is done automatically on first start)
 
 Find below some examples that describe how to use the framework.
 
 ## Example 1
 
-The goal of this example is to provide a full update process by only using the commant line utilities. We will suppose that we have four version of our software and we just released a newv version, 5.0. We will use the _update_ directory in order to store the information related to the updates of our software.
+The goal of this example is to provide a full update process by only using the commant line utilities. We will suppose that we have four versions of our software and we want to release a new version 5.0. We will use the _update_ directory in order to store the information related to the updates of our software.
 
 ### Step 0 - Start up
 
-If you have never used the framework to provide updates to your clients, is good practice to follow the _Step 1_ for each release of your software, starting from the oldest to the newest.
+If you have never used the framework to provide updates to your clients, it is a good practice to follow the _Step 1_ for each release of your software, starting from the oldest to the newest.
 
 ### Step 1 - Metadata Creation
 
-The first step is to create the metadata, this is done with the _VersionReleaser.exe_ tool. We run the following command:
+The first step is to create the metadata, this is done with the **VersionReleaser.exe** tool. We run the following command:
 
 	VersionReleaser.exe --working-dir updates Examples\Example1\MyApplication.v5.0.zip
 	-=[ Version Releaser ]=-
@@ -51,7 +51,7 @@ Now the metadata are created and the new artifacts are saved.
 
 ### Step 2 - Start update server
 
-Now you have to start the update server. The framework provides an utility that will run a web server in order to accept update requests. You can do this with the following command:
+Now you have to start the update server. The framework provides a program named **UpdateServer.exe** that will run a web server in order to accept update requests. You can do this with the following command:
 
 	UpdateServer.exe --working-dir updates
 	-=[ Version Releaser ]=-
@@ -67,7 +67,7 @@ Now you have to start the update server. The framework provides an utility that 
 	[INFO] 2019-08-10 15:06:48 - Loaded project MyApplication version 5.0
 	[17:06:48 INF] Smooth! Suave listener started in 86.698ms with binding 127.0.0.1:80
 	
-The server recognized that we defined five applications. It is also very important to take note ofthe *public key*. This value must be set in the update client in order to ensure the integrity of the updates.
+The server recognizes that we defined five applications. It is also very important to take note of the *public key*. This value must be set in the client in order to ensure the integrity of the updates.
 
 ### Step 3 - Run the update client
 
@@ -75,7 +75,7 @@ The final step of this example is to update the client code by connecting to the
 
 * The address of the update server
 * The public key of the server
-* The name of the project that must be installed
+* The name of the project that must be updated
 
 The first two information can be retrieved from the output of the server in the previous step. We suppose that the update must be installed in the current directory (a very common case if you distribute the updater program togheter with your binary), you can change this value with the _--directory_ argument. You can now run the following command:
 
@@ -89,6 +89,8 @@ The first two information can be retrieved from the output of the server in the 
 If you now take a look at the current directory you will see the new files that were created due to the update process.
 
 ## Example 2
+
+TODO
 
 # Security
 
