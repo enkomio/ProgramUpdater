@@ -51,10 +51,7 @@
     <Compile Include="CryptoUtilityTests.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
-  <ItemGroup>
-    <Reference Include="FSharp.Core">
-      <HintPath>..\..\packages\FSharp.Core.4.5.2\lib\net45\FSharp.Core.dll</HintPath>
-    </Reference>
+  <ItemGroup>    
     <Reference Include="mscorlib" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -68,6 +65,11 @@
     <ProjectReference Include="..\..\ES.Update\ES.Update.fsproj">
       <Name>ES.Update</Name>
       <Project>{b68eadf0-b0db-46a6-949a-9133cabb067a}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\..\UpdateServer\UpdateServer.fsproj">
+      <Name>UpdateServer</Name>
+      <Project>{e2589f02-7694-44ab-9129-e0881f589ea8}</Project>
       <Private>True</Private>
     </ProjectReference>
   </ItemGroup>

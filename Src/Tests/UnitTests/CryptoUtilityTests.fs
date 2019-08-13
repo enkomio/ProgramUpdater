@@ -1,6 +1,7 @@
 ﻿namespace UnitTests
 
 open System
+open System.Reflection
 open System.Text
 open ES.Update
 open System.Net.NetworkInformation
@@ -9,19 +10,14 @@ open System.IO
 module CryptoUtilityTests =
 
     let private getMacAddresses() =
-        NetworkInterface.GetAllNetworkInterfaces()
-        |> Array.filter(fun ni -> 
-            (ni.NetworkInterfaceType = NetworkInterfaceType.Wireless80211
-            || ni.NetworkInterfaceType = NetworkInterfaceType.Ethernet)
-            && ni.OperationalStatus = OperationalStatus.Up
-        )
-        |> Array.collect(fun ni -> ni.GetPhysicalAddress().GetAddressBytes())
+        let utility = typeof<UpdateServer.Settings>.Assembly.ManifestModule.GetType("UpdateServer.Utility")
+        let getMacAddressesMethod = utility.GetMethod("getMacAddresses", BindingFlags.Static ||| BindingFlags.NonPublic)
+        getMacAddressesMethod.Invoke(null, Array.empty) :?> Byte array
 
     let private getHardDiskSerials() =
-        DriveInfo.GetDrives()
-        |> Array.filter(fun drive -> drive.IsReady)
-        |> Array.collect(fun drive -> drive.RootDirectory.CreationTime.ToBinary() |> BitConverter.GetBytes)
-        
+        let utility = typeof<UpdateServer.Settings>.Assembly.ManifestModule.GetType("UpdateServer.Utility")
+        let getMacAddressesMethod = utility.GetMethod("getHardDiskSerials", BindingFlags.Static ||| BindingFlags.NonPublic)
+        getMacAddressesMethod.Invoke(null, Array.empty) :?> Byte array
 
     let private ``Sign data and verify``() =
         // generate signature
