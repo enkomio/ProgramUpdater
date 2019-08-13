@@ -49,7 +49,7 @@ The first step is to create the metadata, this is done with the **VersionRelease
 	
 Now the metadata are created and the new artifacts are saved.
 
-### Step 2 - Start update server
+### Step 2 - Start the update server
 
 Now you have to start the update server. The framework provides a program named **UpdateServer.exe** that will run a web server in order to accept update requests. You can do this with the following command:
 
@@ -90,7 +90,35 @@ If you now take a look at the current directory you will see the new files that 
 
 ## Example 2
 
+The goal of this example is to show how to use the library in order to create a custom update. The result will be the same as the previous example. You can find the related files in the <a href="https://github.com/enkomio/ProgramUpdater/tree/master/Src/Examples/Example2">Example 2</a> folder.
+
+### Step 1 - Metadata Creation
+
+The most common case when you have to generate the metada for a new release is to use the command line utility. If for some reason you want to use the library you must use the **MetadataBuilder** class and specify the working directory where the metadata will be saved.
+
+An example of usage is:
+
+	var metadataBuilder = new MetadataBuilder(workspaceDirectory);
+	metadataBuilder.CreateReleaseMetadata(fileName);
+	
+### Step 2 - Start the update server
+
+The framework provides a **WebServer** class that can be used to run the update server. The web server is based on the Suave project. Ro run a web server you have to specify:
+
+* The binding base URI
+* The workspace directory
+* The private key   
+ 
+&nbsp;
+
+	var (publicKey, privateKey) = CryptoUtility.GenerateKeys();
+	var server = new WebServer(this.BindingUri, this.WorkspaceDirectory, privateKey);	
+	
+### Step 3 - Implement the update client
+
 TODO
+
+To generate a new pair of public and private keys you can use the **CryptoUtility.GenerateKeys** method. Find below an example of code that start a web server.
 
 # Security
 
