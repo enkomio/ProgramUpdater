@@ -9,6 +9,7 @@ type Settings() =
     member val ServerPublicKey = String.Empty with get, set
     member val UpdateBaseUri = String.Empty with get, set
     member val ProjectName = String.Empty with get, set
+    member val DestinationDirectory = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) with get, set
 
     static member Read() =
         let configFile = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "configuration.json")

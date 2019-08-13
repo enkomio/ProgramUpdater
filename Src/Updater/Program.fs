@@ -13,16 +13,24 @@ module Program =
     type CLIArguments =
         | Verbose
         | Directory of path:String
+        | Server_Uri of uri:String     
+        | Project of name:String
+        | Server_Key of key:String
     with
         interface IArgParserTemplate with
             member s.Usage =
                 match s with
+                | Server_Key _ -> "the server key to sign updates."
+                | Project _ -> "the name of the project that must be updated."
+                | Server_Uri _ -> "the base uri of the update server."
                 | Directory _ -> "the directory where to apply the update. If not specified use the current one."
                 | Verbose -> "print verbose log messages."
 
     let private _logger =
         log "Updater"
         |> info "NewVersion" "Found a more recent version: {0}. Start update"
+        |> info "UpdateDone" "Project '{0}' was updated to version '{1}' in directory: {2}"
+        |> critical "UpdateError" "Update error: {0}"
         |> build
 
     let private printColor(msg: String, color: ConsoleColor) =
@@ -53,15 +61,23 @@ module Program =
         logProvider.AddLogger(new FileLogger(logLevel, Path.Combine(path, "updater-client.log")))
         logProvider :> ILogProvider  
 
-    let private doUpdate(currentVersion: Version) =
-        let settings = Settings.Read()
-        let updater = new Updater(new Uri(settings.UpdateBaseUri), settings.ProjectName, currentVersion, Convert.FromBase64String(settings.ServerPublicKey))
+    let private doUpdate(currentVersion: Version, baseUri: Uri, projectName: String, serverPublicKey: String, destinationDirectory: String) =
+        let updater = 
+            new Updater(
+                baseUri, 
+                projectName, 
+                currentVersion, 
+                destinationDirectory,
+                Convert.FromBase64String(serverPublicKey)
+            )
         let latestVersion = updater.GetLatestVersion()
         
         if latestVersion > currentVersion then
             _logger?NewVersion(latestVersion)
-            let updates = updater.Update(currentVersion)
-            ()
+            let updateResult = updater.Update(currentVersion)
+            if updateResult.Success 
+            then _logger?UpdateDone(projectName, latestVersion, destinationDirectory)
+            else _logger?UpdateError(updateResult.Error)
 
     [<EntryPoint>]
     let main argv = 
@@ -76,7 +92,14 @@ module Program =
                 let logProvider = configureLogProvider(results.Contains(<@ Verbose @>))
                 logProvider.AddLogSourceToLoggers(_logger)
                 let currentVersion = Utility.readCurrentVersion()
-                doUpdate(currentVersion)
+
+                // run the update
+                let settings = Settings.Read()                
+                let serverUri = results.GetResult(<@ Server_Uri @>, settings.UpdateBaseUri)
+                let projectName = results.GetResult(<@ Project @>, settings.ProjectName)
+                let destinationDirectory = results.GetResult(<@ Directory @>, settings.DestinationDirectory)
+                let serverKey = results.GetResult(<@ Server_Key @>, settings.ServerPublicKey)
+                doUpdate(currentVersion, new Uri(serverUri), projectName, serverKey, destinationDirectory)
             0
         with 
             | :? ArguParseException ->
