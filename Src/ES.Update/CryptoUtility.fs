@@ -15,12 +15,12 @@ module CryptoUtility =
         (publicKey, privateKey)
 
     let sign(data: Byte array, privateKey: Byte array) =
-        use cngKey = CngKey.Import(privateKey, CngKeyBlobFormat.EccPrivateBlob, CngProvider.MicrosoftSoftwareKeyStorageProvider)
+        use cngKey = CngKey.Import(privateKey, CngKeyBlobFormat.EccPrivateBlob)
         use dsa = new ECDsaCng(cngKey)
         dsa.SignData(data)
 
     let verifySignature(data: Byte array, signature: Byte array, publicKey: Byte array) =
-        use cngKey = CngKey.Import(publicKey, CngKeyBlobFormat.EccPublicBlob, CngProvider.MicrosoftSoftwareKeyStorageProvider)
+        use cngKey = CngKey.Import(publicKey, CngKeyBlobFormat.EccPublicBlob)
         use dsa = new ECDsaCng(cngKey)
         dsa.VerifyData(data, signature)
 
