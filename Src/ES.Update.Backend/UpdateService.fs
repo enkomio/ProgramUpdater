@@ -56,7 +56,7 @@ type UpdateService(workspaceDirectory: String, privateKey: Byte array) =
         let updateManager = getUpdateManager(projectName)
             
         // compute zip filename
-        let storageDirectory = Path.Combine(workspaceDirectory, "Binaries")
+        let storageDirectory = Path.Combine(workspaceDirectory, projectName, "Binaries")
         let zipFile = Path.Combine(storageDirectory, getUpdateFileName(version, updateManager))
 
         // check if we already compute this update, if not create it
@@ -69,8 +69,9 @@ type UpdateService(workspaceDirectory: String, privateKey: Byte array) =
                 // create the zip file and store it in the appropriate directory            
                 Directory.CreateDirectory(storageDirectory) |> ignore            
                 createZipFile(zipFile, updateFiles, integrityInfo)
+
+                // add signature to zip file
+                addSignature(zipFile, privateKey)
         )            
 
-        // add signature to zip file
-        removeOldBinaryFiles(this.CacheCleanupSecondsTimeout)
-        addSignature(zipFile, privateKey)
+        zipFile
