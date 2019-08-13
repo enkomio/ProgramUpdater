@@ -32,7 +32,6 @@ module Program =
         log "UpdateServer"
         |> info "CreateKeys" "Encryption keys not found. Generating them"
         |> info "PublicKey" "Public key: {0}"
-        |> info "PrivateKey" "Private key first bytes: {0}"
         |> info "KeysCreated" "Encryption keys created and saved to files. The public key must be distributed togheter with the updater"
         |> info "KeyExported" "Private key exported to file: {0}"
         |> info "KeyImported" "Private key from file '{0}' imported. Be sure to set the public key accordingly."
@@ -78,7 +77,7 @@ module Program =
 
         if not(File.Exists(privateFile)) || not(File.Exists(publicFile)) then
             _logger?CreateKeys()
-            let (privateKey, publicKey) = CryptoUtility.generateKeys()                  
+            let (publicKey, privateKey) = CryptoUtility.generateKeys()                  
             File.WriteAllText(privateFile, privateKey |> Utility.encryptKey |> Convert.ToBase64String)
             File.WriteAllText(publicFile, publicKey |> Convert.ToBase64String)
             _logger?KeysCreated()
@@ -88,7 +87,6 @@ module Program =
 
         // log data
         _logger?PublicKey(File.ReadAllText(publicFile))
-        _logger?PrivateKey(settings.PrivateKey.[0..5])
 
     [<EntryPoint>]
     let main argv = 
@@ -125,7 +123,6 @@ module Program =
                     _logger?KeyImported(fileName)
 
                 else
-                    let settings = Settings.Read()
                     let workingDir = results.GetResult(<@ Working_Dir @>, settings.WorkspaceDirectory)
                     Directory.CreateDirectory(workingDir) |> ignore
 
