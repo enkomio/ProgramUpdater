@@ -53,7 +53,7 @@ type UpdateManager(workingDirectory: String) =
     ]
 
     let getFiles(hashes: String seq) =
-        let fileBucketDirectory = Path.Combine(workingDirectory, "FileBucket")
+        let fileBucketDirectory = Path.Combine(workingDirectory, "FileBucket")        
         let allFiles = Directory.GetFiles(fileBucketDirectory, "*", SearchOption.AllDirectories)
         let updateFiles = mapHashToFile(hashes)
         
@@ -64,6 +64,7 @@ type UpdateManager(workingDirectory: String) =
                 allFiles 
                 |> Array.find(fun f -> Path.GetFileNameWithoutExtension(f).Equals(file.ContentHash, StringComparison.OrdinalIgnoreCase))
                 |> Path.GetDirectoryName
+                |> Path.GetFileName
             let fileName = Path.Combine(fileBucketDirectory, version, file.ContentHash)
             (file, File.ReadAllBytes(fileName))
         )
