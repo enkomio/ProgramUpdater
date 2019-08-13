@@ -98,7 +98,7 @@ The update process use ECDSA with SHA-256 in order to ensure the integrity of th
 
 ## Exporting private key
 
-In order to protect the private key from an attacker that is able to read aribrary file from your filesystem, the key is AES encrypted with parameters that are related to the execution environment (like MAC address, HD features, ...). This mean that you cannot just copy the private key file from one computer to another, since it will not work. If you want to obtain the clear private key you have to export it by issuing the following command:
+In order to protect the private key from an attacker that is able to read aribrary files from your filesystem, the key is AES encrypted with parameters that are related to the execution environment (like MAC address, installed HDs, ...). This means that you cannot just copy the private key file from one computer to another, since it will not work. If you want to obtain the clear private key you have to export it by executing the following command:
 
 	UpdateServer.exe --export-key clean-private-key.txt
 	-=[ Version Releaser ]=-
@@ -109,7 +109,7 @@ In order to protect the private key from an attacker that is able to read aribra
   
 ## Importing private key
 
-If you want to import a private key that was exported from another server you have to run the following command:
+If you want to import a private key that was exported from another server you can do it by run the following command:
 
 	UpdateServer.exe --import-key clean-private-key.txt
 	-=[ Version Releaser ]=-
@@ -118,4 +118,4 @@ If you want to import a private key that was exported from another server you ha
 	[INFO] 2019-08-09 13:47:40 - Public key: RUNTNkIAAAABtk8oMxMbWwWeBVKGckyVK4C9oOdyKSy6/WNG/6763CUEZk+mCf2zgGBViDpPu2N/Crh99rDK2WGsE2b9nYqaq7AA7caRHqcPLXns+aPqjk1teFI9c9+QnU78WOrd2UMKF3CuD2xccvjKATon+3GHBWeJtqZNvXSu8blWmFENmkIMS60BXl2pXb7fPuTXRaSyj6Dtb/IY4CY2rftroIJx1B3g28UHs0cVXWK+pi/DOkWJMb4EspodK9caIjwLxwf1HF3LnVc=
 	[INFO] 2019-08-09 13:47:41 - Private key from file 'clean-private-key.txt' imported. Be sure to set the public key accordingly.
   
-This command will read and saved the private key in an encrypted form with the new parameters of the new server. You have also to copy to the server the public key.
+This command will read and save the private key in an encrypted form with the new parameters of the new server. You have also to copy the public key to the server.
