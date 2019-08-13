@@ -29,38 +29,12 @@ module Utility =
         let zipEntry = zipArchive.CreateEntry("signature")
         use zipEntryStream = zipEntry.Open()
         zipEntryStream.Write(signature, 0, signature.Length)
-
-    let removeOldBinaryFiles(timeout: Int32) =
-        let treshold = DateTime.Now.Subtract(TimeSpan.FromSeconds(float timeout))
-        let tempPath = Path.Combine(Path.GetTempPath(), "UpdateBinaries")
-        if Directory.Exists(tempPath) then
-            Directory.GetFiles(tempPath)
-            |> Array.iter(fun file ->
-                let fileInfo = new FileInfo(file)
-                if fileInfo.CreationTime < treshold then
-                    File.Delete(file)
-            )
-
-    let addSignature(zipFile: String, privateKey: Byte array) =
-        // create signed zip file
-        let tempPath = Path.Combine(Path.GetTempPath(), "UpdateBinaries")
-        Directory.CreateDirectory(tempPath) |> ignore
-
-        let signedZipFile = 
-            Path.Combine(
-                tempPath, 
-                Path.GetFileNameWithoutExtension(zipFile) 
-                + "-SIGID-"
-                + Guid.NewGuid().ToString("N") 
-                + ".zip"
-            )        
-        File.Copy(zipFile, signedZipFile)
-
+        
+    let addSignature(zipFile: String, privateKey: Byte array) =        
         // compute signature and add it to the new file
         let integrityInfo = readIntegrityInfo(zipFile)
         let signature = CryptoUtility.sign(Encoding.UTF8.GetBytes(integrityInfo), privateKey)
-        addSignatureEntry(signedZipFile, signature)
-        signedZipFile
+        addSignatureEntry(zipFile, signature)
 
     let createZipFile(zipFile: String, files: (File * Byte array) list, integrityInfo: String) =
         use zipStream = File.OpenWrite(zipFile)
