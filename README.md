@@ -59,7 +59,7 @@ Now you have to start the update server. The framework provides an utility that 
 
 	[INFO] 2019-08-10 15:06:48 - Encryption keys not found. Generating them
 	[INFO] 2019-08-10 15:06:48 - Encryption keys created and saved to files. The public key must be distributed togheter with the updater
-	[INFO] 2019-08-10 15:06:48 - Public key: RUNTNkIAAAAAYstJRqVzhlg42ITZEW0S/VXIfRhNiSnU+5bgRcfaGfOwse9y0ClAgETYVYw+FJWoKBx1EFXcAuNThLtvRh7Eku8BArz6dBqrb75ERmxP8lfhaHCrwtmqy9WpEuitJxCtWQzAHik3dxGpjGbFIcJBiQhS7Xd4qIs5k1Yuplb/c+CDsaAAsTff7gGuWDzXp+0s7z1mzaUk5vZaKDpDbMp67al0dC/kelxzu7WiUeZTxb5zOWgyOL3+mzUQkYJlQf6imocFRnM=
+	[INFO] 2019-08-10 15:06:48 - Public key: RUNTNUIAAAABQa5NN74/BqJW7Ial8xj2D/QB32Dj7ZuMOmtfIfo4PiHuXD3QiM6xvOvEZbJ1vQPdjUignHYE7BCLdslEMYbCj4AA8QeSc9v7jc1X5cqKCL1tHaJc+B/MWp8sRXlL6wYUJj4bfcC3p/xEJZXeO/RUsO8gKA4KT0UAXsq0bExWRQr6Ioc=
 	[INFO] 2019-08-10 15:06:48 - Loaded project MyApplication version 1.0
 	[INFO] 2019-08-10 15:06:48 - Loaded project MyApplication version 2.0
 	[INFO] 2019-08-10 15:06:48 - Loaded project MyApplication version 3.0
@@ -75,9 +75,18 @@ The final step of this example is to update the client code by connecting to the
 
 * The address of the update server
 * The public key of the server
-* The directory where the update must be installed
+* The name of the project that must be installed
 
-The first two information can be retrieved from the output of the server in the previous step. For the last information we suppose that is the current directory (a very common case if you distribute the updater program togheter with your binary). You can now run the following command:
+The first two information can be retrieved from the output of the server in the previous step. We suppose that the update must be installed in the current directory (a very common case if you distribute the updater program togheter with your binary), you can change this value with the _--directory_ argument. You can now run the following command:
+
+	Updater.exe --project MyApplication --server-uri http://127.0.0.1 --server-key "RUNTNUIAAAABQa5NN74/BqJW7Ial8xj2D/QB32Dj7ZuMOmtfIfo4PiHuXD3QiM6xvOvEZbJ1vQPdjUignHYE7BCLdslEMYbCj4AA8QeSc9v7jc1X5cqKCL1tHaJc+B/MWp8sRXlL6wYUJj4bfcC3p/xEJZXeO/RUsO8gKA4KT0UAXsq0bExWRQr6Ioc="
+	-=[ Program Updater ]=-
+	Copyright (c) 2019 Enkomio
+
+	[INFO] 2019-08-13 14:31:28 - Found a more recent version: 5.0. Start update
+	[INFO] 2019-08-13 14:31:28 - Project 'MyApplication' was updated to version '5.0' in directory: .
+	
+If you now take a look at the current directory you will see the new files that were created due to the update process.
 
 ## Example 2
 
