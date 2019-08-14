@@ -103,22 +103,45 @@ An example of usage is:
 	
 ### Step 2 - Start the update server
 
-The framework provides a **WebServer** class that can be used to run the update server. The web server is based on the Suave project. Ro run a web server you have to specify:
+The framework provides a **WebServer** class that can be used to run the update server. The web server is based on the Suave project. To run a web server you have to specify:
 
 * The binding base URI
 * The workspace directory
 * The private key   
  
-&nbsp;
+To generate a new pair of public and private keys you can use the **CryptoUtility.GenerateKeys** method. Find below an example of code that start a web server.
 
 	var (publicKey, privateKey) = CryptoUtility.GenerateKeys();
 	var server = new WebServer(this.BindingUri, this.WorkspaceDirectory, privateKey);	
 	
 ### Step 3 - Implement the update client
 
-TODO
+The last step is to integrate the updater client in your solution. In this case you need the following information:
 
-To generate a new pair of public and private keys you can use the **CryptoUtility.GenerateKeys** method. Find below an example of code that start a web server.
+* The server base URI
+* The server public key
+* The name of the project that you want update
+* The current project version
+* The destination directory where the update must be installed
+
+All information should alredy know if you followed the Step 2. Now you can update your client with the following code:
+
+	var applicationVersion = new Version(3, 0);            
+	var updater = new Updater(serverBaseUri, applicationName, applicationVersion, destinationDirectory, serverPublicKey);
+
+	var latestVersion = updater.GetLatestVersion();
+	if (latestVersion > applicationVersion)
+	{
+		var updateResult = updater.Update(applicationVersion);
+		if (updateResult.Success)
+		{                    
+			// Update ok
+		}
+		else
+		{
+			// Error
+		}
+	}
 
 # Security
 
