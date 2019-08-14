@@ -28,6 +28,15 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "ES.Update.Releaser", "ES.Up
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Example2", "Examples\Example2\Example2.csproj", "{6176038C-5A8C-4117-81CD-5A936B0679EA}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Example1", "Example1", "{6FF553F4-DFEC-428F-9417-1706C729E770}"
+	ProjectSection(SolutionItems) = preProject
+		Examples\Example1\MyApplication.v1.0.zip = Examples\Example1\MyApplication.v1.0.zip
+		Examples\Example1\MyApplication.v2.0.zip = Examples\Example1\MyApplication.v2.0.zip
+		Examples\Example1\MyApplication.v3.0.zip = Examples\Example1\MyApplication.v3.0.zip
+		Examples\Example1\MyApplication.v4.0.zip = Examples\Example1\MyApplication.v4.0.zip
+		Examples\Example1\MyApplication.v5.0.zip = Examples\Example1\MyApplication.v5.0.zip
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -73,6 +82,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{DE4EE30A-6171-43EA-AE93-3E9EC3C62ABA} = {B20D108B-7063-4FC3-8227-4085E163DA78}
 		{6176038C-5A8C-4117-81CD-5A936B0679EA} = {C0083A5C-9720-4D88-B766-D466A6D33B2A}
+		{6FF553F4-DFEC-428F-9417-1706C729E770} = {C0083A5C-9720-4D88-B766-D466A6D33B2A}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {A497458A-92F6-47AB-9C90-3103B990C6F6}
