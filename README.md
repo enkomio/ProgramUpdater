@@ -4,7 +4,8 @@ A framework to automatize the process of updating a program in an efficent and s
 It was created with the following intents: 
 
 * to be very easy to use and to integrate 
-* to provide an hish security process
+* to provide an high security process
+* to be efficient, if your new release just changed one file you don't need to download the full application but only the changed files
 * to be autoconsistent, you don't need any other external software (web server, database, ...)
 
 # Usage
@@ -51,7 +52,7 @@ The first step is to create the metadata, this is done with the **VersionRelease
 	[INFO] 2019-08-09 19:26:45 - Adding new file 'folder\file8.txt' as 77C6EC70B75CE3254B910DC6073DB04A61E2EB5273191F73B0AB539F6CAD43C2
 	[INFO] 2019-08-09 19:26:45 - Process completed
 	
-Now the metadata are created and the new artifacts are saved.
+Now the metadata are created and the new artifacts are saved. You can exclude some file from the update process, this is very important for configuration file or local database. You can configure the pattern of the file to exclude in the **configuration.json** file. The current list can be found <a href="https://github.com/enkomio/ProgramUpdater/blob/master/Src/VersionReleaser/configuration.json">here</a>.
 
 ### Step 2 - Start the update server
 
