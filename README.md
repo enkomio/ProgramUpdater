@@ -28,7 +28,7 @@ Find below some examples that describe how to use the framework.
 
 All the command line options can also be specified in the given configuration file for each tool. The deafult name for the configuration file is **configuration.json** and it is in JSON format. If a command line value is specified it will take precedence over the value set in the configuration file.
 
-# Example
+# Examples
 
 Below you can find some examples that should provide enough information to use the framework proficiently.
 
