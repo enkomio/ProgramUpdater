@@ -146,6 +146,24 @@ All information should alredy know if you followed the Step 2. Now you can updat
 			// Error
 		}
 	}
+	
+## Example 3
+
+The goal of this example is to show how to customize the web server. Often the update must be provided only to clients that have the needed authorization, in this example we will see how to authorize update requests. The result will be the same as the previous example, indeed most of the code will be pretty much the same except the server code. You can find the related files in the <a href="https://github.com/enkomio/ProgramUpdater/tree/master/Src/Examples/Example3">Example 3</a> folder.
+
+### Step 1 - Metadata Creation
+
+See Example 2 Step 1
+
+### Step 2 - Start the update server
+
+// TODO
+
+### Step 3 - Implement the update client
+
+In this case the difference with the previous example is that we have to authenticate to the server.
+
+// TODO
 
 # Security
 
