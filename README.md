@@ -8,15 +8,13 @@ It was created with the following intents:
 * to be efficient, if your new release just changed one file you don't need to download the full application but only the changed files
 * to be autoconsistent, you don't need any other external software (web server, database, ...)
 
-# Usage
+## Core Concepts
 
 The framework can be used via the command line tools or by integrating it in your web application. In both case, the process to release a new update is composed of the following three steps:
 
 * Create the metadata related to the new update
 * Push the metadata to the update server (this step can be merged with the above one)
 * Run the updated from the client
-
-## Core concepts
 
 In order to setup an update process you need:
 
@@ -29,6 +27,10 @@ Find below some examples that describe how to use the framework.
 ## Configuration File
 
 All the command line options can also be specified in the given configuration file for each tool. The deafult name for the configuration file is **configuration.json** and it is in JSON format. If a command line value is specified it will take precedence over the value set in the configuration file.
+
+# Example
+
+Below you can find some examples that should provide enough information to use the framework proficiently.
 
 ## Example 1
 
