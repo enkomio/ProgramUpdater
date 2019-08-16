@@ -25,6 +25,10 @@ In order to setup an update process you need:
 
 Find below some examples that describe how to use the framework.
 
+## Configuration File
+
+All the command line options can also be specified in the given configuration file for each tool. The deafult name for the configuration file is **configuration.json** and it is in JSON format. If a command line value is specified it will take precedence over the value set in the configuration file.
+
 ## Example 1
 
 The goal of this example is to provide a full update process by only using the commant line utilities. We will suppose that we have four versions of our software and we want to release a new version 5.0. We will use the _update_ directory in order to store the information related to the updates of our software.
