@@ -4,18 +4,17 @@ A framework to automatize the process of updating a program in an efficent and s
 It was created with the following intents: 
 
 * to be very easy to use and to integrate 
-* to provide an hish security process
+* to provide an high security process
+* to be efficient, if your new release just changed one file you don't need to download the full application but only the changed files
 * to be autoconsistent, you don't need any other external software (web server, database, ...)
 
-# Usage
+## Core Concepts
 
 The framework can be used via the command line tools or by integrating it in your web application. In both case, the process to release a new update is composed of the following three steps:
 
 * Create the metadata related to the new update
 * Push the metadata to the update server (this step can be merged with the above one)
 * Run the updated from the client
-
-## Core concepts
 
 In order to setup an update process you need:
 
@@ -28,6 +27,10 @@ Find below some examples that describe how to use the framework.
 ## Configuration File
 
 All the command line options can also be specified in the given configuration file for each tool. The deafult name for the configuration file is **configuration.json** and it is in JSON format. If a command line value is specified it will take precedence over the value set in the configuration file.
+
+# Examples
+
+Below you can find some examples that should provide enough information to use the framework proficiently.
 
 ## Example 1
 
@@ -51,7 +54,7 @@ The first step is to create the metadata, this is done with the **VersionRelease
 	[INFO] 2019-08-09 19:26:45 - Adding new file 'folder\file8.txt' as 77C6EC70B75CE3254B910DC6073DB04A61E2EB5273191F73B0AB539F6CAD43C2
 	[INFO] 2019-08-09 19:26:45 - Process completed
 	
-Now the metadata are created and the new artifacts are saved.
+Now the metadata are created and the new artifacts are saved. You can exclude some file from the update process, this is very important for configuration file or local database. You can configure the pattern of the file to exclude in the **configuration.json** file. The current list can be found <a href="https://github.com/enkomio/ProgramUpdater/blob/master/Src/VersionReleaser/configuration.json">here</a>.
 
 ### Step 2 - Start the update server
 
@@ -146,6 +149,24 @@ All information should alredy know if you followed the Step 2. Now you can updat
 			// Error
 		}
 	}
+	
+## Example 3
+
+The goal of this example is to show how to customize the web server. Often the update must be provided only to clients that have the needed authorization, in this example we will see how to authorize update requests. The result will be the same as the previous example, indeed most of the code will be pretty much the same except the server code. You can find the related files in the <a href="https://github.com/enkomio/ProgramUpdater/tree/master/Src/Examples/Example3">Example 3</a> folder.
+
+### Step 1 - Metadata Creation
+
+See Example 2 Step 1
+
+### Step 2 - Start the update server
+
+// TODO
+
+### Step 3 - Implement the update client
+
+In this case the difference with the previous example is that we have to authenticate to the server.
+
+// TODO
 
 # Security
 
