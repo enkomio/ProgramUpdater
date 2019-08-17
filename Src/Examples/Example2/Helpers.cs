@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Example2
 {
-    internal static class Helpers
+    public static class Helpers
     {
         private static void CreateFakeReleaseFile(String fileName, Int32 numberOfItems)
         {
