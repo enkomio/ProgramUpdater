@@ -77,15 +77,18 @@ type WebServer(binding: Uri, workspaceDirectory: String, privateKey: Byte array,
 
     new (binding: Uri, workspaceDirectory: String, privateKey: Byte array) = new WebServer(binding, workspaceDirectory, privateKey, new LogProvider())
 
-    abstract GetRoutes: String -> WebPart list
-    default this.GetRoutes(prefix: String) = [
+    /// This parameter can specify a uri path prefix to use when invoking endpoints
+    member val PathPrefix = String.Empty with get, set
+
+    abstract GetRoutes: unit -> WebPart list
+    default this.GetRoutes() = [
         GET >=> preFilter >=> choose [ 
-            path (prefix + "/") >=> index          
-            path (prefix + "/latest") >=> authorize latest
+            path (this.PathPrefix + "/") >=> index          
+            path (this.PathPrefix+ "/latest") >=> latest
         ] >=> postFilter
 
         POST >=> preFilter >=> choose [ 
-            path (prefix + "/updates") >=> authorize updates
+            path (this.PathPrefix + "/updates") >=> authorize updates
         ] >=> postFilter
     ]
 
@@ -101,7 +104,7 @@ type WebServer(binding: Uri, workspaceDirectory: String, privateKey: Byte array,
 
         // start web server
         let cfg = buildCfg(binding)
-        let routes = this.GetRoutes(String.Empty) |> choose
+        let routes = this.GetRoutes() |> choose
         startWebServer cfg routes
 
     member this.Stop() =
