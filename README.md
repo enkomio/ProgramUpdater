@@ -157,7 +157,7 @@ The goal of this example is to show how to customize the web server. Often the u
 
 ### Step 0 - Installing dependency
 
-The framework use <a href="https://suave.io/">Suave</a> in order to implements the web server. For standard use, you don't have to worry about it but in this example it is necessary to reference it in order to use its classes. You can use <a href="https://fsprojects.github.io/Paket/">Paket</a> to reference it or add it via <a href="https://www.nuget.org/packages/Suave">NuGet</a>.
+The framework uses <a href="https://suave.io/">Suave</a> in order to implements the web server. For standard use, you don't have to worry about it but in this example it is necessary to reference it in order to use its classes. You can use <a href="https://fsprojects.github.io/Paket/">Paket</a> to reference it or add it via <a href="https://www.nuget.org/packages/Suave">NuGet</a>.
 
 ### Step 1 - Metadata Creation
 
