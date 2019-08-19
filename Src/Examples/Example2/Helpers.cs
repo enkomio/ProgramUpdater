@@ -36,7 +36,7 @@ namespace Example2
         public static (String, String) CreateEnvironment()
         {
             // create dirs
-            var workspaceDirectory = Path.Combine(Path.GetTempPath(), "TEST_ProgramUpdater_Example2");
+            var workspaceDirectory = Path.Combine(Path.GetTempPath(), "TEST_ProgramUpdater_Examples");
             if (Directory.Exists(workspaceDirectory))
             {
                 Directory.Delete(workspaceDirectory, true);
