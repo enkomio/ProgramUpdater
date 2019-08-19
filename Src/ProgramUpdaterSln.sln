@@ -37,6 +37,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Example1", "Example1", "{6F
 		Examples\Example1\MyApplication.v5.0.zip = Examples\Example1\MyApplication.v5.0.zip
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Example3", "Examples\Example3\Example3.csproj", "{3CB4C2C6-2E3D-4DDA-95BF-67CB19DC0F50}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -75,6 +77,10 @@ Global
 		{6176038C-5A8C-4117-81CD-5A936B0679EA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6176038C-5A8C-4117-81CD-5A936B0679EA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6176038C-5A8C-4117-81CD-5A936B0679EA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3CB4C2C6-2E3D-4DDA-95BF-67CB19DC0F50}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3CB4C2C6-2E3D-4DDA-95BF-67CB19DC0F50}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3CB4C2C6-2E3D-4DDA-95BF-67CB19DC0F50}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3CB4C2C6-2E3D-4DDA-95BF-67CB19DC0F50}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -83,6 +89,7 @@ Global
 		{DE4EE30A-6171-43EA-AE93-3E9EC3C62ABA} = {B20D108B-7063-4FC3-8227-4085E163DA78}
 		{6176038C-5A8C-4117-81CD-5A936B0679EA} = {C0083A5C-9720-4D88-B766-D466A6D33B2A}
 		{6FF553F4-DFEC-428F-9417-1706C729E770} = {C0083A5C-9720-4D88-B766-D466A6D33B2A}
+		{3CB4C2C6-2E3D-4DDA-95BF-67CB19DC0F50} = {C0083A5C-9720-4D88-B766-D466A6D33B2A}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {A497458A-92F6-47AB-9C90-3103B990C6F6}
