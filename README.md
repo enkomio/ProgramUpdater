@@ -8,6 +8,10 @@ It was created with the following intents:
 * to be efficient, this means that if your new release just changed one file you don't need to download the full application but only the changed files
 * to be autoconsistent, you don't need any other external software (web server, database, ...) to create an update solution
 
+## Download
+
+A pre-compiled file of the framework can be downloaded from the <a href="https://github.com/enkomio/ProgramUpdater/releases/latest">Release section</a>.
+
 ## Core Concepts
 
 The framework can be used via the command line tools or by integrating it in your web application. In both cases the process to release a new update is composed of the following three steps:
