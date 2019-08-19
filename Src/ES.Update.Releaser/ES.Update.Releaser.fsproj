@@ -68,17 +68,17 @@
   </Target>
   -->
   <ItemGroup>
-    <Reference Include="ES.Fslog">
-      <HintPath>..\packages\FSharpLog\lib\ES.Fslog.dll</HintPath>
-      <Private>True</Private>
-      <Paket>True</Paket>
-    </Reference>
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\ES.Update\ES.Update.fsproj">
       <Name>ES.Update</Name>
       <Project>{b68eadf0-b0db-46a6-949a-9133cabb067a}</Project>
       <Private>True</Private>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="ES.Fslog">
+      <HintPath>..\packages\FSharpLog\lib\ES.Fslog.dll</HintPath>
+      <Private>True</Private>
+      <Paket>True</Paket>
+    </Reference>
   </ItemGroup>
 </Project>
