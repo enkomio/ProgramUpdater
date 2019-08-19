@@ -4,29 +4,27 @@ A framework to automatize the process of updating a program in an efficent and s
 It was created with the following intents: 
 
 * to be very easy to use and to integrate 
-* to provide an high security process
-* to be efficient, if your new release just changed one file you don't need to download the full application but only the changed files
-* to be autoconsistent, you don't need any other external software (web server, database, ...)
+* to provide an high secure process
+* to be efficient, this means that if your new release just changed one file you don't need to download the full application but only the changed files
+* to be autoconsistent, you don't need any other external software (web server, database, ...) to create an update solution
 
 ## Core Concepts
 
-The framework can be used via the command line tools or by integrating it in your web application. In both case, the process to release a new update is composed of the following three steps:
+The framework can be used via the command line tools or by integrating it in your web application. In both cases the process to release a new update is composed of the following three steps:
 
 * Create the metadata related to the new update
-* Push the metadata to the update server (this step can be merged with the above one)
-* Run the updated from the client
+* Push the metadata to the update server (this step can be merged with the one above)
+* Run the update program from the client
 
 In order to setup an update process you need:
 
 * A folder where all the metadata are saved
-* To follow a naming convention for your update file (only zip file are supported for now)
-* Generate and distribute the encryption key (this process is done automatically on first start)
-
-Find below some examples that describe how to use the framework.
+* To follow a naming convention for your update file (only zip file are supported for now). The convention is that the name must be something like: MyApplication.1.2.3.zip.
+* To generate and distribute the encryption key (this process is done automatically on first server execution)
 
 ## Configuration File
 
-All the command line options can also be specified in the given configuration file for each tool. The deafult name for the configuration file is **configuration.json** and it is in JSON format. If a command line value is specified it will take precedence over the value set in the configuration file.
+All the command line options can also be specified in the given configuration file for each tools. The deafult name for the configuration file is **configuration.json** and it is in JSON format. If a command line value is specified it will take precedence over the value set in the configuration file.
 
 # Examples
 
@@ -54,7 +52,7 @@ The first step is to create the metadata, this is done with the **VersionRelease
 	[INFO] 2019-08-09 19:26:45 - Adding new file 'folder\file8.txt' as 77C6EC70B75CE3254B910DC6073DB04A61E2EB5273191F73B0AB539F6CAD43C2
 	[INFO] 2019-08-09 19:26:45 - Process completed
 	
-Now the metadata are created and the new artifacts are saved. You can exclude some file from the update process, this is very important for configuration file or local database. You can configure the pattern of the file to exclude in the **configuration.json** file. The current list can be found <a href="https://github.com/enkomio/ProgramUpdater/blob/master/Src/VersionReleaser/configuration.json">here</a>.
+Now the metadata are created and the new artifacts are saved. You can exclude some files from the update process, this is very important for configuration file or local database. You can configure the patterns of the files to exclude in the **configuration.json** file. The current list can be found <a href="https://github.com/enkomio/ProgramUpdater/blob/master/Src/VersionReleaser/configuration.json">here</a>.
 
 ### Step 2 - Start the update server
 
@@ -84,7 +82,7 @@ The final step of this example is to update the client code by connecting to the
 * The public key of the server
 * The name of the project that must be updated
 
-The first two information can be retrieved from the output of the server in the previous step. We suppose that the update must be installed in the current directory (a very common case if you distribute the updater program togheter with your binary), you can change this value with the _--directory_ argument. You can now run the following command:
+The first two information can be retrieved from the output of the server in the previous step. We suppose that the update must be installed in the current directory (a very common case if you distribute the update program togheter with your binary), if this is not the case you can change this value with the _--directory_ argument. You can now run the following command:
 
 	Updater.exe --project MyApplication --server-uri http://127.0.0.1 --server-key "RUNTNUIAAAABQa5NN74/BqJW7Ial8xj2D/QB32Dj7ZuMOmtfIfo4PiHuXD3QiM6xvOvEZbJ1vQPdjUignHYE7BCLdslEMYbCj4AA8QeSc9v7jc1X5cqKCL1tHaJc+B/MWp8sRXlL6wYUJj4bfcC3p/xEJZXeO/RUsO8gKA4KT0UAXsq0bExWRQr6Ioc="
 	-=[ Program Updater ]=-
@@ -93,7 +91,7 @@ The first two information can be retrieved from the output of the server in the 
 	[INFO] 2019-08-13 14:31:28 - Found a more recent version: 5.0. Start update
 	[INFO] 2019-08-13 14:31:28 - Project 'MyApplication' was updated to version '5.0' in directory: .
 	
-If you now take a look at the current directory you will see the new files that were created due to the update process.
+If you now take a look at the current directory you will see that new files were created due to the update process.
 
 ## Example 2
 
@@ -110,24 +108,24 @@ An example of usage is:
 	
 ### Step 2 - Start the update server
 
-The framework provides a **WebServer** class that can be used to run the update server. The web server is based on the Suave project. To run a web server you have to specify:
+The framework provides a **WebServer** class that can be used to run the update server. The web server is based on the <a href="https://suave.io/">Suave</a> project. To run a web server you have to specify:
 
 * The binding base URI
-* The workspace directory
+* The workspace directory where the metadata are stored
 * The private key   
  
-To generate a new pair of public and private keys you can use the **CryptoUtility.GenerateKeys** method. Find below an example of code that start a web server.
+To generate a new pair of public and private keys you can use the **CryptoUtility.GenerateKeys** method. Find below an example of code that starts a web server.
 
 	var (publicKey, privateKey) = CryptoUtility.GenerateKeys();
 	var server = new WebServer(this.BindingUri, this.WorkspaceDirectory, privateKey);	
 	
 ### Step 3 - Implement the update client
 
-The last step is to integrate the updater client in your solution. In this case you need the following information:
+The last step is to integrate the update client in your solution. In this case you need the following information:
 
 * The server base URI
 * The server public key
-* The name of the project that you want update
+* The name of the project that you want to update
 * The current project version
 * The destination directory where the update must be installed
 
@@ -152,22 +150,22 @@ All information should alredy know if you followed the Step 2. Now you can updat
 	
 ## Example 3
 
-The goal of this example is to show how to customize the web server. Often the update must be provided only to clients that have the needed authorization, in this example we will see how to authorize update requests. The result will be the same as the previous example, indeed most of the code will be pretty much the same except the server code. You can find the related files in the <a href="https://github.com/enkomio/ProgramUpdater/tree/master/Src/Examples/Example3">Example 3</a> folder.
+The goal of this example is to show how to customize the web server. Often the update must be provided only to clients that have the needed authorization, in this example we will see how to authenticate the update requests. You can find the example files in the <a href="https://github.com/enkomio/ProgramUpdater/tree/master/Src/Examples/Example3">Example 3</a> folder.
 
 
 ### Step 0 - Installing dependency
 
-The framework uses <a href="https://suave.io/">Suave</a> in order to implements the web server. For standard use, you don't have to worry about it but in this example it is necessary to reference it in order to use its classes. You can use <a href="https://fsprojects.github.io/Paket/">Paket</a> to reference it or add it via <a href="https://www.nuget.org/packages/Suave">NuGet</a>.
+The framework uses <a href="https://suave.io/">Suave</a> in order to implements the web server. In case of simple use of the ProgramUpdater framework, you don't have to worry about it but in this example it is necessary to reference it in order to use its classes. You can use <a href="https://fsprojects.github.io/Paket/">Paket</a> to reference it or add it via <a href="https://www.nuget.org/packages/Suave">NuGet</a>.
 
 ### Step 1 - Metadata Creation
 
-See Example 2 Step 1
+See *Example 2* or *Example 1* Step 1
 
 ### Step 2 - Start the update server
 
 For this example we will create a sub-class of the **WebServer** framework class and we override the **Authenticate** method in order to verify the credentials that will be sent by the updater.
 
-Below you can find the relevant code that check if the credentials are correct:
+Below you can find the relevant code that checks if the credentials are correct:
 
 	var formParameters = Encoding.UTF8.GetString(ctx.request.rawForm).Split('&');
 	var username = String.Empty;
@@ -202,13 +200,15 @@ In this case the difference with the previous example is that we have to authent
 	
 The specified parameters will be added to the update request and will be used to verify the authentication. At his time it is possible to specify only POST parameters.
 
+<a href="https://github.com/enkomio/ProgramUpdater/blob/master/Src/Examples/Example3/Client.cs#L15">Here</a> you can find the full source code of the **Client** class.
+
 # Security
 
-The update process use ECDSA with SHA-256 in order to ensure the integrity of the update. The public and private keys are automatically generated on first start and saved to local files. 
+The update process use **ECDSA** with **SHA-256** in order to ensure the integrity of the update. The *public* and *private* keys are automatically generated on first start and saved to local files (*public.txt* and *private.txt*). 
 
-## Exporting private key
+## Exporting the private key
 
-In order to protect the private key from an attacker that is able to read aribrary files from your filesystem, the key is AES encrypted with parameters that are related to the execution environment (like MAC address, installed HDs, ...). This means that you cannot just copy the private key file from one computer to another, since it will not work. If you want to obtain the clear private key you have to export it by executing the following command:
+In order to protect the private key from an attacker that is able to read aribrary files from your filesystem, the key is AES encrypted with parameters that are related to the execution environment (MAC address, properties of the installed HDs). This means that you cannot just copy the private key file from one computer to another, since it will not work. If you want to obtain the clear private key you have to export it by executing the following command:
 
 	UpdateServer.exe --export-key clean-private-key.txt
 	-=[ Version Releaser ]=-
