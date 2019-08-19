@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -27,7 +24,7 @@ namespace Example3
         private static void RunClient(String destinationDirectory)
         {
             var client = new Client();
-            client.Run(_server, destinationDirectory);
+            client.Run(destinationDirectory);
         }
 
         static void Main(string[] args)
