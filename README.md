@@ -42,36 +42,37 @@ If you have never used the framework to provide updates to your clients, it is a
 
 The first step is to create the metadata, this is done with the **VersionReleaser.exe** tool. We run the following command:
 
-	VersionReleaser.exe --working-dir updates Examples\Example1\MyApplication.v5.0.zip
-	-=[ Version Releaser ]=-
-	Copyright (c) 2019 Enkomio
+````bash
+VersionReleaser.exe --working-dir updates Examples\Example1\MyApplication.v5.0.zip
+-=[ Version Releaser ]=-
+Copyright (c) 2019 Enkomio
 
-	[INFO] 2019-08-09 19:26:45 - Analyze release file: MyApplication.v5.0.zip
-	[INFO] 2019-08-09 19:26:45 - Saving release metadata
-	[INFO] 2019-08-09 19:26:45 - Saving artifacts to update
-	[INFO] 2019-08-09 19:26:45 - Adding new file 'folder\file8.txt' as 77C6EC70B75CE3254B910DC6073DB04A61E2EB5273191F73B0AB539F6CAD43C2
-	[INFO] 2019-08-09 19:26:45 - Process completed
-	
+[INFO] 2019-08-09 19:26:45 - Analyze release file: MyApplication.v5.0.zip
+[INFO] 2019-08-09 19:26:45 - Saving release metadata
+[INFO] 2019-08-09 19:26:45 - Saving artifacts to update
+[INFO] 2019-08-09 19:26:45 - Adding new file 'folder\file8.txt' as 77C6EC70B75CE3254B910DC6073DB04A61E2EB5273191F73B0AB539F6CAD43C2
+[INFO] 2019-08-09 19:26:45 - Process completed
+````
 Now the metadata are created and the new artifacts are saved. You can exclude some files from the update process, this is very important for configuration file or local database. You can configure the patterns of the files to exclude in the **configuration.json** file. The current list can be found <a href="https://github.com/enkomio/ProgramUpdater/blob/master/Src/VersionReleaser/configuration.json">here</a>.
 
 ### Step 2 - Start the update server
 
 Now you have to start the update server. The framework provides a program named **UpdateServer.exe** that will run a web server in order to accept update requests. You can do this with the following command:
+````bash
+UpdateServer.exe --working-dir updates
+-=[ Version Releaser ]=-
+Copyright (c) 2019 Enkomio
 
-	UpdateServer.exe --working-dir updates
-	-=[ Version Releaser ]=-
-	Copyright (c) 2019 Enkomio
-
-	[INFO] 2019-08-10 15:06:48 - Encryption keys not found. Generating them
-	[INFO] 2019-08-10 15:06:48 - Encryption keys created and saved to files. The public key must be distributed togheter with the updater
-	[INFO] 2019-08-10 15:06:48 - Public key: RUNTNUIAAAABQa5NN74/BqJW7Ial8xj2D/QB32Dj7ZuMOmtfIfo4PiHuXD3QiM6xvOvEZbJ1vQPdjUignHYE7BCLdslEMYbCj4AA8QeSc9v7jc1X5cqKCL1tHaJc+B/MWp8sRXlL6wYUJj4bfcC3p/xEJZXeO/RUsO8gKA4KT0UAXsq0bExWRQr6Ioc=
-	[INFO] 2019-08-10 15:06:48 - Loaded project MyApplication version 1.0
-	[INFO] 2019-08-10 15:06:48 - Loaded project MyApplication version 2.0
-	[INFO] 2019-08-10 15:06:48 - Loaded project MyApplication version 3.0
-	[INFO] 2019-08-10 15:06:48 - Loaded project MyApplication version 4.0
-	[INFO] 2019-08-10 15:06:48 - Loaded project MyApplication version 5.0
-	[17:06:48 INF] Smooth! Suave listener started in 86.698ms with binding 127.0.0.1:80
-	
+[INFO] 2019-08-10 15:06:48 - Encryption keys not found. Generating them
+[INFO] 2019-08-10 15:06:48 - Encryption keys created and saved to files. The public key must be distributed togheter with the updater
+[INFO] 2019-08-10 15:06:48 - Public key: RUNTNUIAAAABQa5NN74/BqJW7Ial8xj2D/QB32Dj7ZuMOmtfIfo4PiHuXD3QiM6xvOvEZbJ1vQPdjUignHYE7BCLdslEMYbCj4AA8QeSc9v7jc1X5cqKCL1tHaJc+B/MWp8sRXlL6wYUJj4bfcC3p/xEJZXeO/RUsO8gKA4KT0UAXsq0bExWRQr6Ioc=
+[INFO] 2019-08-10 15:06:48 - Loaded project MyApplication version 1.0
+[INFO] 2019-08-10 15:06:48 - Loaded project MyApplication version 2.0
+[INFO] 2019-08-10 15:06:48 - Loaded project MyApplication version 3.0
+[INFO] 2019-08-10 15:06:48 - Loaded project MyApplication version 4.0
+[INFO] 2019-08-10 15:06:48 - Loaded project MyApplication version 5.0
+[17:06:48 INF] Smooth! Suave listener started in 86.698ms with binding 127.0.0.1:80
+````
 The server recognizes that we defined five applications. It is also very important to take note of the *public key*. This value must be set in the client in order to ensure the integrity of the updates.
 
 ### Step 3 - Run the update client
@@ -83,14 +84,14 @@ The final step of this example is to update the client code by connecting to the
 * The name of the project that must be updated
 
 The first two information can be retrieved from the output of the server in the previous step. We suppose that the update must be installed in the current directory (a very common case if you distribute the update program togheter with your binary), if this is not the case you can change this value with the _--directory_ argument. You can now run the following command:
+````bash
+Updater.exe --project MyApplication --server-uri http://127.0.0.1 --server-key "RUNTNUIAAAABQa5NN74/BqJW7Ial8xj2D/QB32Dj7ZuMOmtfIfo4PiHuXD3QiM6xvOvEZbJ1vQPdjUignHYE7BCLdslEMYbCj4AA8QeSc9v7jc1X5cqKCL1tHaJc+B/MWp8sRXlL6wYUJj4bfcC3p/xEJZXeO/RUsO8gKA4KT0UAXsq0bExWRQr6Ioc="
+-=[ Program Updater ]=-
+Copyright (c) 2019 Enkomio
 
-	Updater.exe --project MyApplication --server-uri http://127.0.0.1 --server-key "RUNTNUIAAAABQa5NN74/BqJW7Ial8xj2D/QB32Dj7ZuMOmtfIfo4PiHuXD3QiM6xvOvEZbJ1vQPdjUignHYE7BCLdslEMYbCj4AA8QeSc9v7jc1X5cqKCL1tHaJc+B/MWp8sRXlL6wYUJj4bfcC3p/xEJZXeO/RUsO8gKA4KT0UAXsq0bExWRQr6Ioc="
-	-=[ Program Updater ]=-
-	Copyright (c) 2019 Enkomio
-
-	[INFO] 2019-08-13 14:31:28 - Found a more recent version: 5.0. Start update
-	[INFO] 2019-08-13 14:31:28 - Project 'MyApplication' was updated to version '5.0' in directory: .
-	
+[INFO] 2019-08-13 14:31:28 - Found a more recent version: 5.0. Start update
+[INFO] 2019-08-13 14:31:28 - Project 'MyApplication' was updated to version '5.0' in directory: .
+````
 If you now take a look at the current directory you will see that new files were created due to the update process.
 
 ## Example 2
@@ -102,10 +103,10 @@ The goal of this example is to show how to use the library in order to create a 
 The most common case when you have to generate the metada for a new release is to use the command line utility. If for some reason you want to use the library you must use the **MetadataBuilder** class and specify the working directory where the metadata will be saved.
 
 An example of usage is:
-
-	var metadataBuilder = new MetadataBuilder(workspaceDirectory);
-	metadataBuilder.CreateReleaseMetadata(fileName);
-	
+````csharp
+var metadataBuilder = new MetadataBuilder(workspaceDirectory);
+metadataBuilder.CreateReleaseMetadata(fileName);
+````
 ### Step 2 - Start the update server
 
 The framework provides a **WebServer** class that can be used to run the update server. The web server is based on the <a href="https://suave.io/">Suave</a> project. To run a web server you have to specify:
@@ -115,10 +116,10 @@ The framework provides a **WebServer** class that can be used to run the update 
 * The private key   
  
 To generate a new pair of public and private keys you can use the **CryptoUtility.GenerateKeys** method. Find below an example of code that starts a web server.
-
-	var (publicKey, privateKey) = CryptoUtility.GenerateKeys();
-	var server = new WebServer(this.BindingUri, this.WorkspaceDirectory, privateKey);	
-	
+````csharp
+var (publicKey, privateKey) = CryptoUtility.GenerateKeys();
+var server = new WebServer(this.BindingUri, this.WorkspaceDirectory, privateKey);	
+````
 ### Step 3 - Implement the update client
 
 The last step is to integrate the update client in your solution. In this case you need the following information:
@@ -130,24 +131,24 @@ The last step is to integrate the update client in your solution. In this case y
 * The destination directory where the update must be installed
 
 All information should alredy know if you followed the Step 2. Now you can update your client with the following code:
+````csharp
+var applicationVersion = new Version(3, 0);            
+var updater = new Updater(serverBaseUri, applicationName, applicationVersion, destinationDirectory, serverPublicKey);
 
-	var applicationVersion = new Version(3, 0);            
-	var updater = new Updater(serverBaseUri, applicationName, applicationVersion, destinationDirectory, serverPublicKey);
-
-	var latestVersion = updater.GetLatestVersion();
-	if (latestVersion > applicationVersion)
-	{
-		var updateResult = updater.Update(applicationVersion);
-		if (updateResult.Success)
-		{                    
-			// Update ok
-		}
-		else
-		{
-			// Error
-		}
+var latestVersion = updater.GetLatestVersion();
+if (latestVersion > applicationVersion)
+{
+	var updateResult = updater.Update(applicationVersion);
+	if (updateResult.Success)
+	{                    
+		// Update ok
 	}
-	
+	else
+	{
+		// Error
+	}
+}
+````
 ## Example 3
 
 The goal of this example is to show how to customize the web server. Often the update must be provided only to clients that have the needed authorization, in this example we will see how to authenticate the update requests. You can find the example files in the <a href="https://github.com/enkomio/ProgramUpdater/tree/master/Src/Examples/Example3">Example 3</a> folder.
@@ -166,38 +167,38 @@ See *Example 2* or *Example 1* Step 1
 For this example we will create a sub-class of the **WebServer** framework class and we override the **Authenticate** method in order to verify the credentials that will be sent by the updater.
 
 Below you can find the relevant code that checks if the credentials are correct:
+````csharp
+var formParameters = Encoding.UTF8.GetString(ctx.request.rawForm).Split('&');
+var username = String.Empty;
+var password = String.Empty;
 
-	var formParameters = Encoding.UTF8.GetString(ctx.request.rawForm).Split('&');
-	var username = String.Empty;
-	var password = String.Empty;
-
-	foreach(var parameter in formParameters)
+foreach(var parameter in formParameters)
+{
+	var nameValue = parameter.Split('=');
+	if (nameValue[0].Equals("Username", StringComparison.OrdinalIgnoreCase))
 	{
-		var nameValue = parameter.Split('=');
-		if (nameValue[0].Equals("Username", StringComparison.OrdinalIgnoreCase))
-		{
-			username = nameValue[1];
-		}
-		else if (nameValue[0].Equals("Password", StringComparison.OrdinalIgnoreCase))
-		{
-			password = nameValue[1];
-		}
+		username = nameValue[1];
 	}
+	else if (nameValue[0].Equals("Password", StringComparison.OrdinalIgnoreCase))
+	{
+		password = nameValue[1];
+	}
+}
 
-	return 
-		username.Equals(AuthenticatedWebServer.Username, StringComparison.Ordinal) 
-		&& password.Equals(AuthenticatedWebServer.Password, StringComparison.Ordinal);
-		
+return 
+	username.Equals(AuthenticatedWebServer.Username, StringComparison.Ordinal) 
+	&& password.Equals(AuthenticatedWebServer.Password, StringComparison.Ordinal);
+````		
 <a href="https://github.com/enkomio/ProgramUpdater/blob/master/Src/Examples/Example3/AuthenticatedWebServer.cs#L37">Here</a> you can find the full source code of the **AuthenticatedWebServer** class.
 
 ### Step 3 - Implement the update client
 
 In this case the difference with the previous example is that we have to authenticate to the server. This is an easy step if we know the username and password. We just have to add these info to the update request. This is easily done with the following code:
-
-	// add username and password to the update request
-	updater.AddParameter("username", AuthenticatedWebServer.Username);
-	updater.AddParameter("password", AuthenticatedWebServer.Password);
-	
+````csharp
+// add username and password to the update request
+updater.AddParameter("username", AuthenticatedWebServer.Username);
+updater.AddParameter("password", AuthenticatedWebServer.Password);
+````
 The specified parameters will be added to the update request and will be used to verify the authentication. At his time it is possible to specify only POST parameters.
 
 <a href="https://github.com/enkomio/ProgramUpdater/blob/master/Src/Examples/Example3/Client.cs#L15">Here</a> you can find the full source code of the **Client** class.
