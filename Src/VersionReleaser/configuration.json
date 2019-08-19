@@ -1,5 +1,5 @@
 ﻿{
-  "WorkspaceDirectory": "E:\\Updates",
+  "WorkspaceDirectory": "updates",
   "PatternToExclude": [
     ".json$",
     ".lic",
