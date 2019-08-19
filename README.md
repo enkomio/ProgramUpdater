@@ -154,6 +154,11 @@ All information should alredy know if you followed the Step 2. Now you can updat
 
 The goal of this example is to show how to customize the web server. Often the update must be provided only to clients that have the needed authorization, in this example we will see how to authorize update requests. The result will be the same as the previous example, indeed most of the code will be pretty much the same except the server code. You can find the related files in the <a href="https://github.com/enkomio/ProgramUpdater/tree/master/Src/Examples/Example3">Example 3</a> folder.
 
+
+### Step 0 - Installing dependency
+
+The framework uses <a href="https://suave.io/">Suave</a> in order to implements the web server. For standard use, you don't have to worry about it but in this example it is necessary to reference it in order to use its classes. You can use <a href="https://fsprojects.github.io/Paket/">Paket</a> to reference it or add it via <a href="https://www.nuget.org/packages/Suave">NuGet</a>.
+
 ### Step 1 - Metadata Creation
 
 See Example 2 Step 1
