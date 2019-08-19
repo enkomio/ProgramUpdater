@@ -165,13 +165,42 @@ See Example 2 Step 1
 
 ### Step 2 - Start the update server
 
-// TODO
+For this example we will create a sub-class of the **WebServer** framework class and we override the **Authenticate** method in order to verify the credentials that will be sent by the updater.
+
+Below you can find the relevant code that check if the credentials are correct:
+
+	var formParameters = Encoding.UTF8.GetString(ctx.request.rawForm).Split('&');
+	var username = String.Empty;
+	var password = String.Empty;
+
+	foreach(var parameter in formParameters)
+	{
+		var nameValue = parameter.Split('=');
+		if (nameValue[0].Equals("Username", StringComparison.OrdinalIgnoreCase))
+		{
+			username = nameValue[1];
+		}
+		else if (nameValue[0].Equals("Password", StringComparison.OrdinalIgnoreCase))
+		{
+			password = nameValue[1];
+		}
+	}
+
+	return 
+		username.Equals(AuthenticatedWebServer.Username, StringComparison.Ordinal) 
+		&& password.Equals(AuthenticatedWebServer.Password, StringComparison.Ordinal);
+		
+<a href="https://github.com/enkomio/ProgramUpdater/blob/master/Src/Examples/Example3/AuthenticatedWebServer.cs#L37">Here</a> you can find the full source code of the **AuthenticatedWebServer** class.
 
 ### Step 3 - Implement the update client
 
-In this case the difference with the previous example is that we have to authenticate to the server.
+In this case the difference with the previous example is that we have to authenticate to the server. This is an easy step if we know the username and password. We just have to add these info to the update request. This is easily done with the following code:
 
-// TODO
+	// add username and password to the update request
+	updater.AddParameter("username", AuthenticatedWebServer.Username);
+	updater.AddParameter("password", AuthenticatedWebServer.Password);
+	
+The specified parameters will be added to the update request and will be used to verify the authentication. At his time it is possible to specify only POST parameters.
 
 # Security
 
