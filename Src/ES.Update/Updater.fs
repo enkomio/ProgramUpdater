@@ -1,12 +1,15 @@
 ﻿namespace ES.Update
 
 open System
+open System.Collections.Generic
 open System.Net
 open System.IO
 open System.IO.Compression
 open System.Text
 
 type Updater(serverUri: Uri, projectName: String, currentVersion: Version, destinationDirectory: String, publicKey: Byte array) =    
+    let mutable _additionalData: Dictionary<String, String> option = None
+    
     let downloadUpdates(resultFile: String) =
         try
             // configure request
@@ -15,10 +18,21 @@ type Updater(serverUri: Uri, projectName: String, currentVersion: Version, desti
             webRequest.Timeout <- 5 * 60 * 1000
             webRequest.ContentType <- "application/x-www-form-urlencoded"
 
+            // compose data
+            let data = new StringBuilder()
+            data.AppendFormat("version={0}&project={1}", currentVersion, projectName) |> ignore
+
+            _additionalData
+            |> Option.iter(fun additionalData ->
+                additionalData
+                |> Seq.iter(fun kv ->
+                    data.AppendFormat("&{0}={1}", kv.Key, kv.Value) |> ignore
+                )
+            )
+
             // write data
             use streamWriter = new StreamWriter(webRequest.GetRequestStream())
-            let data = String.Format("version={0}&project={1}", currentVersion, projectName)
-            streamWriter.Write(data)
+            streamWriter.Write(data.ToString().Trim('&'))
             streamWriter.Close()
 
             // send the request and save the response to file
@@ -29,6 +43,15 @@ type Updater(serverUri: Uri, projectName: String, currentVersion: Version, desti
             true
         with _ ->
             false
+
+    member this.AddParameter(name: String, value: String) =
+        let dataStorage =
+            match _additionalData with
+            | None -> 
+                _additionalData <- new Dictionary<String, String>() |> Some
+                _additionalData.Value
+            | Some d -> d
+        dataStorage.[name] <- value
             
     member this.InstallUpdates(updateFile: String) =
         use zipStream = File.OpenRead(updateFile)
@@ -41,11 +64,9 @@ type Updater(serverUri: Uri, projectName: String, currentVersion: Version, desti
             Error "Integrity check failed"
 
     member this.GetLatestVersion() =
-        let path = String.Format("/latest?project={0}", projectName)
-
-        // contact server
-        use webClient = new WebClient()
-        webClient.DownloadString(new Uri(serverUri, path)) |> Version.Parse
+        use webClient = new WebClient()        
+        let latestVersionUri = new Uri(serverUri, String.Format("latest?project={0}", projectName))
+        webClient.DownloadString(latestVersionUri) |> Version.Parse
         
     member this.Update(version: Version) =
         // prepare update file
