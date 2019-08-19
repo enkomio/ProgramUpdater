@@ -9,6 +9,7 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "ES.Update.Backend", "ES.Upd
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{F1C186E9-2666-448C-B634-02D208C8C68A}"
 	ProjectSection(SolutionItems) = preProject
+		build.fsx = build.fsx
 		paket.dependencies = paket.dependencies
 	EndProjectSection
 EndProject
