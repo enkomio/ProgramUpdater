@@ -20,6 +20,8 @@
 x64/
 x86/
 bld/
+build/
+release/
 [Bb]in/
 [Oo]bj/
 [Ll]og/
