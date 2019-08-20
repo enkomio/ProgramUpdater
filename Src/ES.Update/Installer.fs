@@ -3,8 +3,9 @@
 open System
 open System.IO
 open System.IO.Compression
+open System.Diagnostics
 
-type internal Installer(destinationDirectory: String) =
+type Installer(destinationDirectory: String) =
     let compareHash(hashValue: String, content: Byte array) =
         let computedHashValue = CryptoUtility.sha256(content)
         hashValue.Equals(computedHashValue, StringComparison.OrdinalIgnoreCase)
@@ -59,9 +60,25 @@ type internal Installer(destinationDirectory: String) =
             copyFile(filePath, content)
         )   
 
-    let install(extractedDirectory: String, files: (String * String) array) =
-        // TODO: check if there is an installer program to run
-        copyAllFiles(extractedDirectory, files)
+    let runInstaller(installerProgram: String, extractedDirectory: String) =
+        Process.Start(
+            new ProcessStartInfo(
+                FileName = installerProgram,
+                UseShellExecute = false,
+                Arguments = String.Format("--source \"{0}\" --dest \"{1}\"")
+            )) |> ignore
+        Environment.Exit(0)
+
+    let install(extractedDirectory: String, files: (String * String) array) =        
+        let installerProgram = Path.Combine(extractedDirectory, "installer.exe")
+        if File.Exists(installerProgram)
+        then runInstaller(installerProgram, extractedDirectory)
+        else copyAllFiles(extractedDirectory, files)
+
+    member this.CopyUpdates(sourceDirectory: String) =
+        let catalog = File.ReadAllText(Path.Combine(sourceDirectory, "catalog"))
+        let files = getFiles(catalog)
+        copyAllFiles(sourceDirectory, files)
 
     member this.InstallUpdate(zipArchive: ZipArchive, fileList: String) =
         let extractedDirectory = extractZip(zipArchive)
@@ -71,7 +88,7 @@ type internal Installer(destinationDirectory: String) =
         // install
         match integrityCheckResult with
         | Ok _ -> install(extractedDirectory, files)            
-        | Error msg -> ()
+        | Error _ -> ()
         
         // cleanup
         Directory.Delete(extractedDirectory, true)
