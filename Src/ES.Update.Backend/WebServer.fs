@@ -53,7 +53,7 @@ type WebServer(binding: Uri, workspaceDirectory: String, privateKey: Byte array,
                 && _updateService.IsValidProject(values.["project"]) 
             ->
             
-            let signedZip = _updateService.GetUpdates(!inputVersion, values.["project"])
+            let signedZip = _updateService.GetUpdates(!inputVersion, values.["project"], this.InstallerPath)
 
             // send the update zip file
             addHeader "Content-Type" "application/octet-stream"
@@ -79,6 +79,9 @@ type WebServer(binding: Uri, workspaceDirectory: String, privateKey: Byte array,
 
     /// This parameter can specify a uri path prefix to use when invoking endpoints
     member val PathPrefix = String.Empty with get, set
+
+    /// The path where the installer program is stored. If this path exists an Installer will be pushed in the update package
+    member val InstallerPath = String.Empty with get, set
 
     abstract GetRoutes: unit -> WebPart list
     default this.GetRoutes() = [

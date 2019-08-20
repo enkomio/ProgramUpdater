@@ -48,7 +48,7 @@ type UpdateService(workspaceDirectory: String, privateKey: Byte array) =
     member this.IsValidProject(projectName: String) =
         _updateManagers.ContainsKey(projectName)
 
-    member this.GetUpdates(version: Version, projectName: String) =
+    member this.GetUpdates(version: Version, projectName: String, installerPath: String) =
         let updateManager = getUpdateManager(projectName)
             
         // compute zip filename
@@ -68,6 +68,9 @@ type UpdateService(workspaceDirectory: String, privateKey: Byte array) =
 
                 // add signature to zip file
                 addSignature(zipFile, privateKey)
+
+                // add installer if necessary
+                if Directory.Exists(installerPath) then addInstaller(zipFile, installerPath)
         )            
 
         zipFile
