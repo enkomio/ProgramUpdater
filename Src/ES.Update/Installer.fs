@@ -70,7 +70,7 @@ type Installer(destinationDirectory: String) =
         Environment.Exit(0)
 
     let install(extractedDirectory: String, files: (String * String) array) =        
-        let installerProgram = Path.Combine(extractedDirectory, "installer.exe")
+        let installerProgram = Path.Combine(extractedDirectory, "Installer.exe")
         if File.Exists(installerProgram)
         then runInstaller(installerProgram, extractedDirectory)
         else copyAllFiles(extractedDirectory, files)
