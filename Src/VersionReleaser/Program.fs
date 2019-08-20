@@ -7,10 +7,9 @@ open Argu
 open ES.Fslog
 open ES.Fslog.Loggers
 open ES.Fslog.TextFormatters
+open ES.Update.Releaser
 
 module Program =
-    open ES.Update.Releaser
-
     type CLIArguments =
         | [<MainCommand; Last>] File of file:String   
         | Working_Dir of path:String
