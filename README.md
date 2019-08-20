@@ -4,7 +4,7 @@ A framework to automatize the process of updating a program in an efficent and s
 It was created with the following intents: 
 
 * to be very easy to use and to integrate 
-* to provide an high secure process
+* to provide an high secure process (the integrity of all files is checked before being used)
 * to be efficient, this means that if your new release just changed one file you don't need to download the full application but only the changed files
 * to be autoconsistent, you don't need any other external software (web server, database, ...) to create an update solution
 
