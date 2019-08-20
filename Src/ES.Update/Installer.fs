@@ -65,7 +65,7 @@ type Installer(destinationDirectory: String) =
             new ProcessStartInfo(
                 FileName = installerProgram,
                 UseShellExecute = false,
-                Arguments = String.Format("--source \"{0}\" --dest \"{1}\"")
+                Arguments = String.Format("--source \"{0}\" --dest \"{1}\"", extractedDirectory, destinationDirectory)
             )) |> ignore
         Environment.Exit(0)
 
