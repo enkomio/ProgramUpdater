@@ -28,11 +28,7 @@ type UpdateService(workspaceDirectory: String, privateKey: Byte array) =
             Directory.CreateDirectory(projectDirectory) |> ignore
             _updateManagers.[projectName] <- new UpdateManager(projectDirectory)
         )
-
-    /// This timeout is used to clean the temporary update files that are generated
-    /// during the update process.
-    member val CacheCleanupSecondsTimeout = 24 * 60 * 60 with get, set
-
+        
     member this.GetAvailableVersions() =
         _updateManagers 
         |> Seq.toArray
