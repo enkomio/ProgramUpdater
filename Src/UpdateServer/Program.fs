@@ -17,6 +17,7 @@ module Program =
         | Import_Key of file:String
         | Working_Dir of path:String
         | Binding_Address of uri:String
+        | Installer of path:String
         | Verbose
     with
         interface IArgParserTemplate with
@@ -26,6 +27,7 @@ module Program =
                 | Import_Key _ -> "import the private key from the specified file."
                 | Working_Dir _ -> "the directory where the update artifacts will be saved."
                 | Binding_Address _ -> "the binding address of the update server."
+                | Installer _ -> "the path where the installer program is stored."
                 | Verbose -> "print verbose log messages."
 
     let private _logger =
@@ -127,13 +129,15 @@ module Program =
                     Directory.CreateDirectory(workingDir) |> ignore
 
                     let bindingAddress = results.GetResult(<@ Binding_Address @>, settings.BindingAddress)
+                    let installerPath = results.GetResult(<@ Installer @>, settings.InstallerPath)
 
                     let server = 
                         new WebServer(
                             new Uri(bindingAddress), 
                             workingDir, 
                             settings.PrivateKey |> Convert.FromBase64String,
-                            logProvider
+                            logProvider,
+                            InstallerPath = installerPath
                         )
                     server.Start()       
                 0
