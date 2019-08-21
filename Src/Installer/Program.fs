@@ -5,6 +5,10 @@ open Argu
 open ES.Update
 
 module Program =
+    open System.Diagnostics
+    open System.Threading
+    open System.Text
+
     type CLIArguments = 
         | Source of path:String
         | Dest of path:String
@@ -13,7 +17,7 @@ module Program =
             member s.Usage =
                 match s with
                 | Source _ -> "the source directory containing the updated files."
-                | Dest _ -> "the destination directory where the updated files must be copied."
+                | Dest _ -> "the destination directory where the updated files must be copied."                
 
     let printColor(msg: String, color: ConsoleColor) =
         Console.ForegroundColor <- color
@@ -39,6 +43,21 @@ module Program =
         let installer = new Installer(destinationDirectory)
         installer.CopyUpdates(sourceDirectory)
 
+    let waitForParentCompletation() =
+        let mutexName = 
+            Process.GetCurrentProcess().StartInfo.Arguments 
+            |> Encoding.UTF8.GetBytes
+            |> sha256
+        use mutex = new Mutex(false, mutexName)  
+        
+        try
+            let result = mutex.WaitOne(TimeSpan.FromSeconds(10.))
+            mutex.ReleaseMutex()
+            result
+        with :? AbandonedMutexException -> 
+            mutex.ReleaseMutex()
+            true
+
     [<EntryPoint>]
     let main argv = 
         printBanner()
@@ -54,9 +73,14 @@ module Program =
                 let sourceDirectory = results.TryGetResult(<@ Source @>)
                 let destinationDirectory = results.TryGetResult(<@ Dest @>)
                 match (sourceDirectory, destinationDirectory) with
-                | (Some sourceDirectory, Some destinationDirectory) -> 
-                    runInstaller(sourceDirectory, destinationDirectory)
-                    0
+                | (Some sourceDirectory, Some destinationDirectory) ->
+                    if waitForParentCompletation() then
+                        runInstaller(sourceDirectory, destinationDirectory)
+                        Console.WriteLine("Installation done!")
+                        0
+                    else
+                        printError("Parent process didn't completed successfully")
+                        1
                 | _ -> 
                     printError("Source or Destination directory not specified")
                     1
