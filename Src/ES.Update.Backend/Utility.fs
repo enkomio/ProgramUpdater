@@ -23,18 +23,44 @@ module Utility =
         zipStream.CopyTo(memStream)
         Encoding.UTF8.GetString(memStream.ToArray())
 
-    let private addSignatureEntry(zipFile: String, signature: Byte array) =
+    let private addEntry(zipFile: String, name: String, content: Byte array) =
         use zipStream = File.Open(zipFile, FileMode.Open)
         use zipArchive = new ZipArchive(zipStream, ZipArchiveMode.Update)
-        let zipEntry = zipArchive.CreateEntry("signature")
+        let zipEntry = zipArchive.CreateEntry(name)
         use zipEntryStream = zipEntry.Open()
-        zipEntryStream.Write(signature, 0, signature.Length)
+        zipEntryStream.Write(content, 0, content.Length)
         
     let addSignature(zipFile: String, privateKey: Byte array) =        
         // compute signature and add it to the new file
         let integrityInfo = readIntegrityInfo(zipFile)
         let signature = CryptoUtility.sign(Encoding.UTF8.GetBytes(integrityInfo), privateKey)
-        addSignatureEntry(zipFile, signature)
+        addEntry(zipFile, "signature", signature)
+
+    let private getRelativePath(fileName: String, basePath: String) =
+        fileName.Replace(basePath, String.Empty).TrimStart(Path.DirectorySeparatorChar)
+
+    let addInstaller(zipFile: String, installerPath: String, privateKey: Byte array) =
+        // compute the integrtiy info for the installer
+        let integrityInfo = new StringBuilder()
+        Directory.GetFiles(installerPath, "*.*", SearchOption.AllDirectories)
+        |> Array.iter(fun fileName ->
+            let relativePath = getRelativePath(fileName, installerPath)
+            let hashValue = sha256(File.ReadAllBytes(fileName))
+            integrityInfo.AppendFormat("{0},{1}", hashValue, relativePath).AppendLine() |> ignore
+        )
+
+        // sign the integrity info and add the catalog
+        let catalog = Encoding.UTF8.GetBytes(integrityInfo.ToString())
+        let signature = CryptoUtility.sign(catalog, privateKey)
+        addEntry(zipFile, "installer-signature", signature)
+        addEntry(zipFile, "installer-catalog", catalog)
+
+        // add all files from installerPath to the zip file
+        Directory.GetFiles(installerPath, "*.*", SearchOption.AllDirectories)
+        |> Array.iter(fun fileName ->
+            let relativePath = getRelativePath(fileName, installerPath)
+            addEntry(zipFile, relativePath, File.ReadAllBytes(fileName))
+        )
 
     let createZipFile(zipFile: String, files: (File * Byte array) list, integrityInfo: String) =
         use zipStream = File.OpenWrite(zipFile)

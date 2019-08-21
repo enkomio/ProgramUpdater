@@ -70,7 +70,7 @@ type UpdateService(workspaceDirectory: String, privateKey: Byte array) =
                 addSignature(zipFile, privateKey)
 
                 // add installer if necessary
-                if Directory.Exists(installerPath) then addInstaller(zipFile, installerPath)
+                if Directory.Exists(installerPath) then addInstaller(zipFile, installerPath, privateKey)
         )            
 
         zipFile
