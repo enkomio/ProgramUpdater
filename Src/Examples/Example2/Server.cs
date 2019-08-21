@@ -6,8 +6,6 @@ namespace Example2
 {
     public class Server
     {
-        private WebServer _server = null;
-
         public Uri BindingUri { get; set; }
         public Byte[] PublicKey { get; set; }
         public String WorkspaceDirectory { get; set; }
@@ -20,17 +18,19 @@ namespace Example2
 
             var rnd = new Random();
             this.BindingUri = new Uri(String.Format("http://127.0.0.1:{0}", rnd.Next(1025, 65534)));
-            _server = new WebServer(this.BindingUri, this.WorkspaceDirectory, privateKey);
+            this.WebServer = new WebServer(this.BindingUri, this.WorkspaceDirectory, privateKey);
         }
+
+        public WebServer WebServer { get; set; }
 
         public void Start()
         {
-            _server.Start();
+            this.WebServer.Start();
         }
 
         public void Stop()
         {
-            _server.Stop();
+            this.WebServer.Stop();
         }
     }
 }
