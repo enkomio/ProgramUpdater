@@ -45,9 +45,10 @@ let fsharpProjects = [
     "ES.Update"
     "ES.Update.Backend"
     "ES.Update.Releaser"
+    "Installer"
     "Updater"
     "UpdateServer"
-    "VersionReleaser"
+    "VersionReleaser"    
 ]
 
 // C# project names
