@@ -5,13 +5,19 @@ open System.IO.Compression
 open System.IO
 
 module internal Utility =
-    let readEntry(zipArchive: ZipArchive, name: String) =
+    let tryReadEntry(zipArchive: ZipArchive, name: String) =
         let entry =
             zipArchive.Entries
-            |> Seq.find(fun entry -> entry.FullName.Equals(name, StringComparison.OrdinalIgnoreCase))
+            |> Seq.tryFind(fun entry -> entry.FullName.Equals(name, StringComparison.OrdinalIgnoreCase))
         
-        use zipStream = entry.Open()
-        use memStream = new MemoryStream()
-        zipStream.CopyTo(memStream)
-        memStream.ToArray()
+        match entry with
+        | Some entry ->
+            use zipStream = entry.Open()
+            use memStream = new MemoryStream()
+            zipStream.CopyTo(memStream)
+            Some <| memStream.ToArray()
+        | None ->
+            None
 
+    let readEntry(zipArchive: ZipArchive, name: String) =
+        tryReadEntry(zipArchive, name).Value

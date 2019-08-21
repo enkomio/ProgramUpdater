@@ -44,6 +44,19 @@ type Updater(serverUri: Uri, projectName: String, currentVersion: Version, desti
         with _ ->
             false
 
+    let verifyCatalogIntegrity(zipArchive: ZipArchive) =
+        let catalog = Utility.readEntry(zipArchive, "catalog")
+        let catalogOk = CryptoUtility.verifySignature(catalog, Utility.readEntry(zipArchive, "signature"), publicKey)
+
+        let installerCatalogOk = 
+            match Utility.tryReadEntry(zipArchive, "installer-catalog") with
+            | Some installerCatalog -> 
+                CryptoUtility.verifySignature(installerCatalog, Utility.readEntry(zipArchive, "installer-signature"), publicKey)
+            | None -> 
+                true
+
+        catalogOk && installerCatalogOk
+
     member this.AddParameter(name: String, value: String) =
         let dataStorage =
             match _additionalData with
@@ -56,9 +69,9 @@ type Updater(serverUri: Uri, projectName: String, currentVersion: Version, desti
     member this.InstallUpdates(updateFile: String) =
         use zipStream = File.OpenRead(updateFile)
         use zipArchive = new ZipArchive(zipStream, ZipArchiveMode.Read)
-        let fileList = Utility.readEntry(zipArchive, "catalog")
-        if CryptoUtility.verifySignature(fileList, Utility.readEntry(zipArchive, "signature"), publicKey) then
+        if verifyCatalogIntegrity(zipArchive) then
             let installer = new Installer(destinationDirectory)
+            let fileList = Utility.readEntry(zipArchive, "catalog")
             installer.InstallUpdate(zipArchive, Encoding.UTF8.GetString(fileList))
         else
             Error "Integrity check failed"
