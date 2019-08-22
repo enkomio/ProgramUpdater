@@ -8,10 +8,10 @@ open System.Reflection
 open ES.Fslog.Loggers
 open ES.Fslog.TextFormatters
 open ES.Update.Backend
+open ES.Update
+open System.Text
 
 module Program =
-    open ES.Update
-
     type CLIArguments =
         | Export_Key of file:String
         | Import_Key of file:String
@@ -74,21 +74,34 @@ module Program =
             Path.Combine(curDir, "public.txt")
         )
 
+    let tryReadPrivateKey(settings: Settings) =
+        let (privateFile, publicFile) = getKeyFileNames()
+        if not(File.Exists(privateFile)) || not(File.Exists(publicFile)) then
+            false
+        else
+            settings.PrivateKey <- Utility.readPrivateKey(privateFile)
+            true
+
     let private createEncryptionKeys(settings: Settings) =
         let (privateFile, publicFile) = getKeyFileNames()
-
-        if not(File.Exists(privateFile)) || not(File.Exists(publicFile)) then
-            _logger?CreateKeys()
-            let (publicKey, privateKey) = CryptoUtility.generateKeys()                  
-            File.WriteAllText(privateFile, privateKey |> Utility.encryptKey |> Convert.ToBase64String)
-            File.WriteAllText(publicFile, publicKey |> Convert.ToBase64String)
-            _logger?KeysCreated()
+        _logger?CreateKeys()
+        let (publicKey, privateKey) = CryptoUtility.generateKeys()                  
+        File.WriteAllText(privateFile, privateKey |> Utility.encryptKey |> Convert.ToBase64String)
+        File.WriteAllText(publicFile, publicKey |> Convert.ToBase64String)
+        _logger?KeysCreated()
         
         // read keys
         settings.PrivateKey <- Utility.readPrivateKey(privateFile)
 
-        // log data
-        _logger?PublicKey(File.ReadAllText(publicFile))
+    let private readPassword() =
+        Console.Write("Enter password: ")
+        let password1 = Utility.readPassword()
+        Console.Write("Re-enter password: ")
+        let password2 = Utility.readPassword()
+
+        if password1.Equals(password2, StringComparison.Ordinal) 
+        then Some password1
+        else None
 
     [<EntryPoint>]
     let main argv = 
@@ -109,22 +122,39 @@ module Program =
 
                 // no private keys specified, read the content from file
                 if String.IsNullOrWhiteSpace(settings.PrivateKey) then 
-                    createEncryptionKeys(settings)
+                    if not(tryReadPrivateKey(settings)) then
+                        createEncryptionKeys(settings)
 
                 if results.Contains(<@ Export_Key @>) then
-                    let fileName = results.GetResult(<@ Export_Key @>)
-                    File.WriteAllText(fileName, settings.PrivateKey)
-                    _logger?KeyExported(fileName)
+                    match readPassword() with
+                    | Some password ->
+                        let fileName = results.GetResult(<@ Export_Key @>)
+                        let encryptedKey = Utility.encryptExportedKey(password, settings.PrivateKey)
+                        File.WriteAllText(fileName, encryptedKey)
+                        _logger?KeyExported(fileName)
+                    | None ->
+                        printError("The two inserted passwords don't match")
 
                 elif results.Contains(<@ Import_Key @>) then
-                    let fileName = results.GetResult(<@ Import_Key @>)
-                    let key = File.ReadAllText(fileName) |> Convert.FromBase64String
-                    let encryptedKey = Utility.encryptKey(key) |> Convert.ToBase64String
-                    let (privateFile, _) = getKeyFileNames()
-                    File.WriteAllText(privateFile, encryptedKey)
-                    _logger?KeyImported(fileName)
+                    match readPassword() with
+                    | Some password ->
+                        // decrypt key
+                        let fileName = results.GetResult(<@ Import_Key @>)
+                        let encryptedKey = File.ReadAllText(fileName)
+                        let decryptedKey = Utility.decryptImportedKey(password, encryptedKey)
 
+                        // save key locally
+                        let decryptedKeyBytes = decryptedKey |> Convert.FromBase64String
+                        let encryptedKey = Utility.encryptKey(decryptedKeyBytes) |> Convert.ToBase64String
+                        let (privateFile, _) = getKeyFileNames()
+                        File.WriteAllText(privateFile, encryptedKey)
+                        _logger?KeyImported(fileName)
+                    | None ->
+                        printError("The two inserted passwords don't match")
                 else
+                    let (_, publicFile) = getKeyFileNames()
+                    _logger?PublicKey(File.ReadAllText(publicFile))
+
                     let workingDir = results.GetResult(<@ Working_Dir @>, settings.WorkspaceDirectory)
                     Directory.CreateDirectory(workingDir) |> ignore
 
