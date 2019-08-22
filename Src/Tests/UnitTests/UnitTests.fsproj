@@ -49,9 +49,10 @@
     <None Include="App.config" />
     <Content Include="packages.config" />
     <Compile Include="CryptoUtilityTests.fs" />
+    <Compile Include="BackendTests.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
-  <ItemGroup>    
+  <ItemGroup>
     <Reference Include="mscorlib" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
