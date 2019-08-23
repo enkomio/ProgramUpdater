@@ -164,7 +164,7 @@ The framework uses <a href="https://suave.io/">Suave</a> in order to implements 
 
 ### Step 1 - Metadata Creation
 
-See *Example 2* or *Example 1* Step 1
+See *Example 1* Step 1
 
 ### Step 2 - Start the update server
 
@@ -206,6 +206,36 @@ updater.AddParameter("password", AuthenticatedWebServer.Password);
 The specified parameters will be added to the update request and will be used to verify the authentication. At his time it is possible to specify only POST parameters.
 
 <a href="https://github.com/enkomio/ProgramUpdater/blob/master/Src/Examples/Example3/Client.cs#L15">Here</a> you can find the full source code of the **Client** class.
+
+## Example 4
+
+The goal of this example is to provide a flexible update method by invoking an external program to do the update. Often the update method is not just a matter of copy the files to the destination directory but other, more complex, tasks must be done. 
+
+In version 1.1 was released a new feature that allows to invoke an external program in order to do the installation. The framework provides an **Installer** program that copy the files to a destination directory. Using this approach is the suggested one, since it will avoid to have update problems when you have to update the current running program (you cannot write on a file associated to a running process). In order achieve this, when an external Installer is used, the update process is terminated in order to avoid conflict.
+
+Of course you can use your own installer program, you have just to add it to the configuration (we will see how to do it). The only rules that must be respected are:
+
+* The name of the installer program must be **Installer.exe**
+* It accepts two arguments: **--source** that is the directory where the new files  are stored and **--dest** that is the directory that must be updated with the new files.
+
+### Step 1 - Metadata Creation
+
+See *Example 1* Step 1.
+
+### Step 2 - Start the update server
+
+This step is very similar to *Example 2* Step 2. The main difference is that you have to specify the directory where your installer is stored. All the files in this directory will be copied in the update package sent to the client. In the listing below you can see an example that use the **Installer.exe** provided by the framework:
+
+````csharp
+// set the installer path
+var installerPath = Path.GetDirectoryName(typeof(Installer.Program).Assembly.Location);
+_server.WebServer.InstallerPath = installerPath;
+````
+For security reason the framework will add the integrity info about the installer inside the update package. These info will be checked by the client before to invoke the installer.
+
+### Step 3 - Run the update client
+
+See Step 3 of previous examples.
 
 # Security
 
