@@ -12,12 +12,16 @@ module Program =
     type CLIArguments = 
         | Source of path:String
         | Dest of path:String
+        | Exec of fileName:String
+        | Args of args:String
     with
         interface IArgParserTemplate with
             member s.Usage =
                 match s with
                 | Source _ -> "the source directory containing the updated files."
                 | Dest _ -> "the destination directory where the updated files must be copied."                
+                | Exec _ -> "an option program to execute after the installation."
+                | Args _ -> "the arguments to pass to the external program to execute after installation."                
 
     let printColor(msg: String, color: ConsoleColor) =
         Console.ForegroundColor <- color
@@ -58,6 +62,9 @@ module Program =
             mutex.ReleaseMutex()
             true
 
+    let runProgram(args: String) (fileName: String) =
+        Process.Start(fileName, args) |> ignore
+
     [<EntryPoint>]
     let main argv = 
         printBanner()
@@ -72,11 +79,14 @@ module Program =
             else
                 let sourceDirectory = results.TryGetResult(<@ Source @>)
                 let destinationDirectory = results.TryGetResult(<@ Dest @>)
+                let execArguments = results.GetResult(<@ Args @>, String.Empty)
+
                 match (sourceDirectory, destinationDirectory) with
                 | (Some sourceDirectory, Some destinationDirectory) ->
                     if waitForParentCompletation() then
                         runInstaller(sourceDirectory, destinationDirectory)
                         Console.WriteLine("Installation done!")
+                        results.TryGetResult(<@ Exec @>) |> Option.iter(runProgram execArguments)
                         0
                     else
                         printError("Parent process didn't completed successfully")
