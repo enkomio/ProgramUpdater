@@ -6,6 +6,7 @@ open System.IO.Compression
 open System.Diagnostics
 open System.Text
 open System.Threading
+open System.Reflection
 
 module AbbandonedMutex =
     let mutable mutex: Mutex option = None
@@ -86,7 +87,14 @@ type Installer(destinationDirectory: String) =
     let runInstaller(installerProgram: String, extractedDirectory: String) =
         match verifyIntegrity(extractedDirectory, "installer-catalog") with
         | Ok _ ->
-            let argumentString = String.Format("--source \"{0}\" --dest \"{1}\"", extractedDirectory, destinationDirectory)
+            let argumentString = 
+                String.Format(
+                    "--source \"{0}\" --dest \"{1}\" --exec \"{2}\" --args \"{3}\"", 
+                    extractedDirectory, 
+                    destinationDirectory,
+                    Process.GetCurrentProcess().StartInfo.FileName,
+                    Process.GetCurrentProcess().StartInfo.Arguments
+                )
             createInstallerMutex(argumentString)            
 
             Process.Start(
