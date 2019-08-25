@@ -11,6 +11,30 @@ namespace Example2
 {
     public static class Helpers
     {
+        private static String GetVersionFileName()
+        {
+            var curDirectory = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
+            var versionFileName = Path.Combine(curDirectory, Assembly.GetEntryAssembly().ManifestModule.Name + ".version");
+            return versionFileName;
+        }
+
+        public static Version GetCurrentVersion()
+        {
+            if (File.Exists(GetVersionFileName()))
+            {
+                return Version.Parse(File.ReadAllText(GetVersionFileName()));
+            }
+            else
+            {
+                return new Version(3, 0);
+            }
+        }
+
+        public static void SaveVersion(Version version)
+        {
+            File.WriteAllText(GetVersionFileName(), version.ToString());
+        }
+
         private static void CreateFakeReleaseFile(String fileName, Int32 numberOfItems)
         {
             using (var fileHandle = File.OpenWrite(fileName))
@@ -35,6 +59,22 @@ namespace Example2
 
         public static (String, String) CreateEnvironment()
         {
+            if (File.Exists(GetVersionFileName()))
+            {
+                var deleteFile = GetVersionFileName() + ".DELETE";
+                if (File.Exists(deleteFile))
+                {
+                    // second run
+                    File.Delete(GetVersionFileName());
+                    File.Delete(deleteFile);
+                }
+                else
+                {
+                    // first run, create delete file for next run
+                    File.WriteAllText(deleteFile, "DELETE ME");
+                }
+            }
+
             // create dirs
             var workspaceDirectory = Path.Combine(Path.GetTempPath(), "TEST_ProgramUpdater_Examples");
             if (Directory.Exists(workspaceDirectory))

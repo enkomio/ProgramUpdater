@@ -1,10 +1,6 @@
 ﻿using ES.Update;
 using Example2;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Example4
 {
@@ -12,7 +8,7 @@ namespace Example4
     {
         public void Run(Server server, String destinationDirectory)
         {
-            var myVersion = new Version(3, 0);
+            var myVersion = Helpers.GetCurrentVersion();
             var updater = new Updater(server.BindingUri, "MyApplication", myVersion, destinationDirectory, server.PublicKey);
 
             var latestVersion = updater.GetLatestVersion();
@@ -25,6 +21,7 @@ namespace Example4
                 if (updateResult.Success)
                 {                    
                     Console.WriteLine("Everything is fine the installer program is now running. After completation you should see in this directory a file named 'file8.txt' in directory 'folder'");
+                    Helpers.SaveVersion(latestVersion);
                 }
                 else
                 {
