@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Example2;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -29,7 +30,7 @@ namespace Example3
 
         static void Main(string[] args)
         {
-            var (workspaceDirectory, destinationDirectory) = Example2.Helpers.CreateEnvironment();
+            var (workspaceDirectory, destinationDirectory) = Helpers.CreateEnvironment(5);
             RunServer(workspaceDirectory);
             RunClient(destinationDirectory);
             _server.Stop();

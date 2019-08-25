@@ -38,7 +38,7 @@ namespace Example4
 
         static void Main(string[] args)
         {
-            var (workspaceDirectory, _) = Helpers.CreateEnvironment();
+            var (workspaceDirectory, _) = Helpers.CreateEnvironment(6);
             RunServer(workspaceDirectory);
             RunClient(Directory.GetCurrentDirectory());
             _server.Stop();

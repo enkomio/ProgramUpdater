@@ -57,7 +57,7 @@ namespace Example2
             }
         }
 
-        public static (String, String) CreateEnvironment()
+        public static (String, String) CreateEnvironment(Int32 numOfFiles = 5)
         {
             if (File.Exists(GetVersionFileName()))
             {
@@ -93,7 +93,7 @@ namespace Example2
             // create some fake zip File and build metadata
             var metadataBuilder = new MetadataBuilder(workspaceDirectory);
             var currentDir = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
-            for (var i = 0; i < 5; i++)
+            for (var i = 0; i < numOfFiles; i++)
             {
                 var fileName = Path.Combine(currentDir, String.Format("MyApplication.v{0}.0.zip", i + 1));
                 Helpers.CreateFakeReleaseFile(fileName, 5 + i);

@@ -29,7 +29,7 @@ namespace Example2
         
         static void Main(string[] args)
         {
-            var (workspaceDirectory, destinationDirectory) = Helpers.CreateEnvironment();
+            var (workspaceDirectory, destinationDirectory) = Helpers.CreateEnvironment(4);
             RunServer(workspaceDirectory);            
             RunClient(destinationDirectory);
             _server.Stop();
