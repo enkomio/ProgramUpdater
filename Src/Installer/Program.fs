@@ -3,12 +3,12 @@
 open System
 open Argu
 open ES.Update
+open System.Diagnostics
+open System.Threading
+open System.Text
+open System.Text.RegularExpressions
 
 module Program =
-    open System.Diagnostics
-    open System.Threading
-    open System.Text
-
     type CLIArguments = 
         | Source of path:String
         | Dest of path:String
@@ -48,10 +48,15 @@ module Program =
         installer.CopyUpdates(sourceDirectory)
 
     let waitForParentCompletation() =
+        let arguments = 
+            String.Join(" ", Environment.GetCommandLineArgs() |> Array.skip 1)
+            |> fun argumentString -> Regex.Replace(argumentString, "[^a-zA-Z]+", String.Empty)   
+                    
         let mutexName = 
-            Process.GetCurrentProcess().StartInfo.Arguments 
+            arguments
             |> Encoding.UTF8.GetBytes
             |> sha256
+
         use mutex = new Mutex(false, mutexName)  
         
         try

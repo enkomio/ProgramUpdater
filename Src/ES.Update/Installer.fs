@@ -7,6 +7,7 @@ open System.Diagnostics
 open System.Text
 open System.Threading
 open System.Reflection
+open System.Text.RegularExpressions
 
 module AbbandonedMutex =
     let mutable mutex: Mutex option = None
@@ -79,9 +80,10 @@ type Installer(destinationDirectory: String) =
 
     let createInstallerMutex(argumentString: String) =
         let mutexName = 
-            argumentString
+            Regex.Replace(argumentString, "[^a-zA-Z]+", String.Empty)            
             |> Encoding.UTF8.GetBytes
             |> sha256
+            
         AbbandonedMutex.mutex <- Some <| new Mutex(true, mutexName)        
         
     let runInstaller(installerProgram: String, extractedDirectory: String) =
@@ -92,9 +94,10 @@ type Installer(destinationDirectory: String) =
                     "--source \"{0}\" --dest \"{1}\" --exec \"{2}\" --args \"{3}\"", 
                     extractedDirectory, 
                     destinationDirectory,
-                    Process.GetCurrentProcess().StartInfo.FileName,
-                    Process.GetCurrentProcess().StartInfo.Arguments
+                    Process.GetCurrentProcess().MainModule.FileName,
+                    String.Join(" ", Environment.GetCommandLineArgs() |> Array.skip 1)
                 )
+            
             createInstallerMutex(argumentString)            
 
             Process.Start(
