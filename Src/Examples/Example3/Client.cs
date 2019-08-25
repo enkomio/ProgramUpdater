@@ -1,4 +1,5 @@
 ﻿using ES.Update;
+using Example2;
 using System;
 using System.IO;
 
@@ -8,7 +9,7 @@ namespace Example3
     {
         public void Run(String destinationDirectory)
         {
-            var myVersion = new Version(3, 0);
+            var myVersion = Helpers.GetCurrentVersion();
             var serverUri = new Uri(AuthenticatedWebServer.BindingUri, "myupdate/");
             var updater = new Updater(serverUri, "MyApplication", myVersion, destinationDirectory, AuthenticatedWebServer.PublicKey);
 
@@ -27,6 +28,7 @@ namespace Example3
                 {
                     var fileContent = File.ReadAllText(Path.Combine(destinationDirectory, "folder", "file8.txt"));
                     Console.WriteLine("Update installed correctly! {0}", fileContent);
+                    Helpers.SaveVersion(latestVersion);
                 }
                 else
                 {

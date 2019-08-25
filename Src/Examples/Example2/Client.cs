@@ -8,7 +8,7 @@ namespace Example2
     {
         public void Run(Server server, String destinationDirectory)
         {
-            var myVersion = new Version(3, 0);            
+            var myVersion = Helpers.GetCurrentVersion();
             var updater = new Updater(server.BindingUri, "MyApplication", myVersion, destinationDirectory, server.PublicKey);
 
             var latestVersion = updater.GetLatestVersion();
@@ -22,6 +22,7 @@ namespace Example2
                 {                    
                     var fileContent = File.ReadAllText(Path.Combine(destinationDirectory, "folder", "file8.txt"));
                     Console.WriteLine("Update installed correctly! {0}", fileContent);
+                    Helpers.SaveVersion(latestVersion);
                 }
                 else
                 {
