@@ -209,14 +209,18 @@ The specified parameters will be added to the update request and will be used to
 
 ## Example 4
 
-The goal of this example is to provide a flexible update method by invoking an external program to do the update. Often the update method is not just a matter of copy the files to the destination directory but other, more complex, tasks must be done. 
+The goal of this example is to provide a flexible update method by invoking an external program to do the update. Often the update method is not just a matter of copy the files to the destination directory but other, more complex, tasks must be done. The full source code of this example can be find in the <a href="https://github.com/enkomio/ProgramUpdater/tree/master/Src/Examples/Example4">Example 4 folder</a>.
 
 In version 1.1 was released a new feature that allows to invoke an external program in order to do the installation. The framework provides an **Installer** program that copy the files to a destination directory. Using this approach is the suggested one, since it will avoid to have update problems when you have to update the current running program (you cannot write on a file associated to a running process). In order achieve this, when an external Installer is used, the update process is terminated in order to avoid conflict.
 
 Of course you can use your own installer program, you have just to add it to the configuration (we will see how to do it). The only rules that must be respected are:
 
 * The name of the installer program must be **Installer.exe**
-* It accepts two arguments: **--source** that is the directory where the new files  are stored and **--dest** that is the directory that must be updated with the new files.
+* It accepts the following arguments: 
+    * **--source** that is the directory where the new files  are stored 
+    * **--dest** that is the directory that must be updated with the new files
+    * **--exec** the full path of an application to run after that the installation process is completed. If empty no program will be invoked
+    * **--args** an optional srgument string to pass to the program to invoke after installation.
 
 ### Step 1 - Metadata Creation
 
@@ -231,6 +235,8 @@ This step is very similar to *Example 2* Step 2. The main difference is that you
 var installerPath = Path.GetDirectoryName(typeof(Installer.Program).Assembly.Location);
 _server.WebServer.InstallerPath = installerPath;
 ````
+The **Installer** program from the framework by default will start again the main process with the specified arguments.
+
 For security reason the framework will add the integrity info about the installer inside the update package. These info will be checked by the client before to invoke the installer.
 
 ### Step 3 - Run the update client
