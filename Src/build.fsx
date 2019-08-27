@@ -165,10 +165,40 @@ Core.Target.create "Release" (fun _ ->
     |> Fake.IO.Zip.zip releaseDirectory releaseFilename
 )
 
+Core.Target.create "NuGet" (fun _ ->    
+    let libDirectory = nugetDirectory + @"lib\"
+    
+    CleanDir nugetDirectory
+    CreateDir nugetDirectory
+    CreateDir libDirectory   
+    
+    packageFiles
+    |> List.map (fun file -> buildDirectory + file)
+    |> Copy libDirectory
+     
+    for package,description in packages do        
+        NuGet (fun p ->
+            {p with
+                Authors = authors
+                Project = package
+                Description = description
+                Version = release.NugetVersion
+                OutputPath = nugetDirectory
+                WorkingDir = nugetDirectory
+                Summary = projectSummary
+                Title = projectName
+                ReleaseNotes = release.Notes |> toLines
+                Dependencies = p.Dependencies
+                AccessKey = getBuildParamOrDefault "nugetkey" String.Empty
+                Publish = hasBuildParam "nugetkey"
+                ToolPath = nuget  }) "fslog.nuspec"
+)
+
 "Clean"        
     ==> "SetAssemblyInfo"
     ==> "Compile" 
     ==> "Release"
+    ==> "NuGet"
     
 // Start build
 Core.Target.runOrDefault "Release"
