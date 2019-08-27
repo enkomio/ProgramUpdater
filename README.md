@@ -249,14 +249,17 @@ The update process use **ECDSA** with **SHA-256** in order to ensure the integri
 
 ## Exporting the private key
 
-In order to protect the private key from an attacker that is able to read aribrary files from your filesystem, the key is AES encrypted with parameters that are related to the execution environment (MAC address, properties of the installed HDs). This means that you cannot just copy the private key file from one computer to another, since it will not work. If you want to obtain the clear private key you have to export it by executing the following command:
+In order to protect the private key from an attacker that is able to read arbitrary files from your filesystem, the key is AES encrypted with parameters that are related to the execution environment (MAC address, properties of the installed HDs). This means that you cannot just copy the private key file from one computer to another, since it will not work. If you want to obtain an exportable private key you have to export it by executing the following command:
 
 	UpdateServer.exe --export-key clean-private-key.txt
 	-=[ Version Releaser ]=-
 	Copyright (c) 2019 Enkomio
 
-	[INFO] 2019-08-09 13:45:18 - Public key: RUNTNkIAAAAAQSTd1xnmvNHa25Z4ENfcXeTlktWZdnABFn/jwcx/KOBX44qZOY/aEp1oXxfhcXZX26Uy5c2P1FZlu5yswPAgqxUBXpxjSyCSYnyKODNpLw0sEqD+L3xcJLIv/3s4vgFaCwIDNiqqn8WWahvsYsu0o41IgMYwjOO4QhsL16Xai+beAEEBBRoWkZJSZR+vB7Vi/Trw7C5kNsPwy5TxK9Fd+ibyrAyewvftI1SWAcEO6OIh9G+bSEkXDPoS77faGYMotbcKhQU=
-	[INFO] 2019-08-09 13:45:18 - Private key exported to file: clean-private-key.txt
+	Enter password: ****
+	Re-enter password: ****
+	[INFO] 2019-08-27 17:02:33 - Private key exported to file: clean-private-key.txt
+	
+The exported key is AES encrypted with the input password.
   
 ## Importing private key
 
@@ -266,7 +269,8 @@ If you want to import a private key that was exported from another server you ca
 	-=[ Version Releaser ]=-
 	Copyright (c) 2019 Enkomio
 
-	[INFO] 2019-08-09 13:47:40 - Public key: RUNTNkIAAAABtk8oMxMbWwWeBVKGckyVK4C9oOdyKSy6/WNG/6763CUEZk+mCf2zgGBViDpPu2N/Crh99rDK2WGsE2b9nYqaq7AA7caRHqcPLXns+aPqjk1teFI9c9+QnU78WOrd2UMKF3CuD2xccvjKATon+3GHBWeJtqZNvXSu8blWmFENmkIMS60BXl2pXb7fPuTXRaSyj6Dtb/IY4CY2rftroIJx1B3g28UHs0cVXWK+pi/DOkWJMb4EspodK9caIjwLxwf1HF3LnVc=
-	[INFO] 2019-08-09 13:47:41 - Private key from file 'clean-private-key.txt' imported. Be sure to set the public key accordingly.
+	Enter password: ****
+	Re-enter password: ****
+	[INFO] 2019-08-27 17:04:14 - Private key from file 'clean-private-key.txt' imported. Be sure to set the public key accordingly.
   
 This command will read and save the private key in an encrypted form with the new parameters of the new server. You have also to copy the public key to the server.
