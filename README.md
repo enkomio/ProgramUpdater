@@ -209,14 +209,18 @@ The specified parameters will be added to the update request and will be used to
 
 ## Example 4
 
-The goal of this example is to provide a flexible update method by invoking an external program to do the update. Often the update method is not just a matter of copy the files to the destination directory but other, more complex, tasks must be done. 
+The goal of this example is to provide a flexible update method by invoking an external program to do the update. Often the update method is not just a matter of copy the files to the destination directory but other, more complex, tasks must be done. The full source code of this example can be find in the <a href="https://github.com/enkomio/ProgramUpdater/tree/master/Src/Examples/Example4">Example 4 folder</a>.
 
-In version 1.1 was released a new feature that allows to invoke an external program in order to do the installation. The framework provides an **Installer** program that copy the files to a destination directory. Using this approach is the suggested one, since it will avoid to have update problems when you have to update the current running program (you cannot write on a file associated to a running process). In order achieve this, when an external Installer is used, the update process is terminated in order to avoid conflict.
+In version 1.1 was released a new feature that allows to invoke an external program in order to do the installation. The framework provides an **Installer** program that copy the files to a destination directory. Using this approach is the suggested one, since it will avoid to have update problems when you have to update the current running program (you cannot write on a file associated to a running process). In order achieve this, when an external Installer is used, the update process is terminated in order to avoid conflict. If you want to be sure that the parent exited just wait on the mutex name composed from the arguments hashes, to know more take a look at the <a href="https://github.com/enkomio/ProgramUpdater/blob/master/Src/Installer/Program.fs#L51">mutex name generation code<a/>.
 
 Of course you can use your own installer program, you have just to add it to the configuration (we will see how to do it). The only rules that must be respected are:
 
 * The name of the installer program must be **Installer.exe**
-* It accepts two arguments: **--source** that is the directory where the new files  are stored and **--dest** that is the directory that must be updated with the new files.
+* It accepts the following arguments: 
+    * **--source** that is the directory where the new files  are stored 
+    * **--dest** that is the directory that must be updated with the new files
+    * **--exec** the full path of an application to run after that the installation process is completed. If empty no program will be invoked
+    * **--args** an optional srgument string to pass to the program to invoke after installation.
 
 ### Step 1 - Metadata Creation
 
@@ -231,6 +235,8 @@ This step is very similar to *Example 2* Step 2. The main difference is that you
 var installerPath = Path.GetDirectoryName(typeof(Installer.Program).Assembly.Location);
 _server.WebServer.InstallerPath = installerPath;
 ````
+The **Installer** program from the framework by default will start again the main process with the specified arguments.
+
 For security reason the framework will add the integrity info about the installer inside the update package. These info will be checked by the client before to invoke the installer.
 
 ### Step 3 - Run the update client
@@ -243,14 +249,17 @@ The update process use **ECDSA** with **SHA-256** in order to ensure the integri
 
 ## Exporting the private key
 
-In order to protect the private key from an attacker that is able to read aribrary files from your filesystem, the key is AES encrypted with parameters that are related to the execution environment (MAC address, properties of the installed HDs). This means that you cannot just copy the private key file from one computer to another, since it will not work. If you want to obtain the clear private key you have to export it by executing the following command:
+In order to protect the private key from an attacker that is able to read arbitrary files from your filesystem, the key is AES encrypted with parameters that are related to the execution environment (MAC address, properties of the installed HDs). This means that you cannot just copy the private key file from one computer to another, since it will not work. If you want to obtain an exportable private key you have to export it by executing the following command:
 
 	UpdateServer.exe --export-key clean-private-key.txt
 	-=[ Version Releaser ]=-
 	Copyright (c) 2019 Enkomio
 
-	[INFO] 2019-08-09 13:45:18 - Public key: RUNTNkIAAAAAQSTd1xnmvNHa25Z4ENfcXeTlktWZdnABFn/jwcx/KOBX44qZOY/aEp1oXxfhcXZX26Uy5c2P1FZlu5yswPAgqxUBXpxjSyCSYnyKODNpLw0sEqD+L3xcJLIv/3s4vgFaCwIDNiqqn8WWahvsYsu0o41IgMYwjOO4QhsL16Xai+beAEEBBRoWkZJSZR+vB7Vi/Trw7C5kNsPwy5TxK9Fd+ibyrAyewvftI1SWAcEO6OIh9G+bSEkXDPoS77faGYMotbcKhQU=
-	[INFO] 2019-08-09 13:45:18 - Private key exported to file: clean-private-key.txt
+	Enter password: ****
+	Re-enter password: ****
+	[INFO] 2019-08-27 17:02:33 - Private key exported to file: clean-private-key.txt
+	
+The exported key is AES encrypted with the input password.
   
 ## Importing private key
 
@@ -260,7 +269,8 @@ If you want to import a private key that was exported from another server you ca
 	-=[ Version Releaser ]=-
 	Copyright (c) 2019 Enkomio
 
-	[INFO] 2019-08-09 13:47:40 - Public key: RUNTNkIAAAABtk8oMxMbWwWeBVKGckyVK4C9oOdyKSy6/WNG/6763CUEZk+mCf2zgGBViDpPu2N/Crh99rDK2WGsE2b9nYqaq7AA7caRHqcPLXns+aPqjk1teFI9c9+QnU78WOrd2UMKF3CuD2xccvjKATon+3GHBWeJtqZNvXSu8blWmFENmkIMS60BXl2pXb7fPuTXRaSyj6Dtb/IY4CY2rftroIJx1B3g28UHs0cVXWK+pi/DOkWJMb4EspodK9caIjwLxwf1HF3LnVc=
-	[INFO] 2019-08-09 13:47:41 - Private key from file 'clean-private-key.txt' imported. Be sure to set the public key accordingly.
+	Enter password: ****
+	Re-enter password: ****
+	[INFO] 2019-08-27 17:04:14 - Private key from file 'clean-private-key.txt' imported. Be sure to set the public key accordingly.
   
 This command will read and save the private key in an encrypted form with the new parameters of the new server. You have also to copy the public key to the server.
