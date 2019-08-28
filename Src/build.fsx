@@ -8,7 +8,6 @@
 #r @"System.IO.Compression.FileSystem"
 
 open System
-open System.Text
 open System.IO
 open Fake
 open Fake.Core.TargetOperators
@@ -143,10 +142,7 @@ Core.Target.create "Compile" (fun _ ->
 Core.Target.create "Release" (fun _ ->
     let releaseDirectory = Path.Combine(releaseDir, String.Format("{0}.v{1}", projectFileName, releaseVersion))
     Directory.CreateDirectory(releaseDirectory) |> ignore
-
-    // copy all files in the release dir    
-    //Shell.copyDir releaseDirectory buildDir  (fun _ -> true)
-    
+        
     fsharpProjects@csharpProjects
     |> List.iter(fun projName -> 
         let buildProjectDir = Path.Combine(buildDir, projName)
@@ -165,40 +161,10 @@ Core.Target.create "Release" (fun _ ->
     |> Fake.IO.Zip.zip releaseDirectory releaseFilename
 )
 
-Core.Target.create "NuGet" (fun _ ->    
-    let libDirectory = nugetDirectory + @"lib\"
-    
-    CleanDir nugetDirectory
-    CreateDir nugetDirectory
-    CreateDir libDirectory   
-    
-    packageFiles
-    |> List.map (fun file -> buildDirectory + file)
-    |> Copy libDirectory
-     
-    for package,description in packages do        
-        NuGet (fun p ->
-            {p with
-                Authors = authors
-                Project = package
-                Description = description
-                Version = release.NugetVersion
-                OutputPath = nugetDirectory
-                WorkingDir = nugetDirectory
-                Summary = projectSummary
-                Title = projectName
-                ReleaseNotes = release.Notes |> toLines
-                Dependencies = p.Dependencies
-                AccessKey = getBuildParamOrDefault "nugetkey" String.Empty
-                Publish = hasBuildParam "nugetkey"
-                ToolPath = nuget  }) "fslog.nuspec"
-)
-
 "Clean"        
     ==> "SetAssemblyInfo"
     ==> "Compile" 
     ==> "Release"
-    ==> "NuGet"
     
 // Start build
 Core.Target.runOrDefault "Release"
