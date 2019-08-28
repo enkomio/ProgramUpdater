@@ -8,10 +8,10 @@ open System.Runtime.InteropServices
 [<assembly: GuidAttribute("0F026EA5-501A-4947-B8E2-5860D3520E99")>]
 [<assembly: AssemblyCompanyAttribute("Enkomio")>]
 [<assembly: AssemblyDescriptionAttribute("A framework to automatize the process of updating a program in an efficent and secure way.")>]
-[<assembly: AssemblyVersionAttribute("1.1.481.49")>]
-[<assembly: AssemblyFileVersionAttribute("1.1.481.49")>]
-[<assembly: AssemblyInformationalVersionAttribute("1.1.481.49")>]
-[<assembly: AssemblyMetadataAttribute("BuildDate","2019-08-27")>]
+[<assembly: AssemblyVersionAttribute("1.1.481.51")>]
+[<assembly: AssemblyFileVersionAttribute("1.1.481.51")>]
+[<assembly: AssemblyInformationalVersionAttribute("1.1.481.51")>]
+[<assembly: AssemblyMetadataAttribute("BuildDate","2019-08-28")>]
 do ()
 
 module internal AssemblyVersionInformation =
@@ -20,7 +20,7 @@ module internal AssemblyVersionInformation =
     let [<Literal>] Guid = "0F026EA5-501A-4947-B8E2-5860D3520E99"
     let [<Literal>] AssemblyCompany = "Enkomio"
     let [<Literal>] AssemblyDescription = "A framework to automatize the process of updating a program in an efficent and secure way."
-    let [<Literal>] AssemblyVersion = "1.1.481.49"
-    let [<Literal>] AssemblyFileVersion = "1.1.481.49"
-    let [<Literal>] AssemblyInformationalVersion = "1.1.481.49"
-    let [<Literal>] AssemblyMetadata_BuildDate = "2019-08-27"
+    let [<Literal>] AssemblyVersion = "1.1.481.51"
+    let [<Literal>] AssemblyFileVersion = "1.1.481.51"
+    let [<Literal>] AssemblyInformationalVersion = "1.1.481.51"
+    let [<Literal>] AssemblyMetadata_BuildDate = "2019-08-28"
