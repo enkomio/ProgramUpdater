@@ -108,6 +108,7 @@ The goal of this example is to show how to use the library in order to create a 
 
 <details><summary>Details</summary>
 <p>
+	
 ### Step 1 - Metadata Creation
 
 The most common case when you have to generate the metada for a new release is to use the command line utility. If for some reason you want to use the library you must use the **MetadataBuilder** class and specify the working directory where the metadata will be saved.
@@ -166,6 +167,8 @@ if (latestVersion > applicationVersion)
 
 The goal of this example is to show how to customize the web server. Often the update must be provided only to clients that have the needed authorization, in this example we will see how to authenticate the update requests. You can find the example files in the <a href="https://github.com/enkomio/ProgramUpdater/tree/master/Src/Examples/Example3">Example 3</a> folder.
 
+<details><summary>Details</summary>
+<p>
 
 ### Step 0 - Installing dependency
 
@@ -216,6 +219,9 @@ The specified parameters will be added to the update request and will be used to
 
 <a href="https://github.com/enkomio/ProgramUpdater/blob/master/Src/Examples/Example3/Client.cs#L15">Here</a> you can find the full source code of the **Client** class.
 
+</p>
+</details>
+
 ## Example 4
 
 The goal of this example is to provide a flexible update method by invoking an external program to do the update. Often the update method is not just a matter of copy the files to the destination directory but other, more complex, tasks must be done. The full source code of this example can be find in the <a href="https://github.com/enkomio/ProgramUpdater/tree/master/Src/Examples/Example4">Example 4 folder</a>.
@@ -230,6 +236,9 @@ Of course you can use your own installer program, you have just to add it to the
     * **--dest** that is the directory that must be updated with the new files
     * **--exec** the full path of an application to run after that the installation process is completed. If empty no program will be invoked
     * **--args** an optional srgument string to pass to the program to invoke after installation.
+    
+<details><summary>Details</summary>
+<p>
 
 ### Step 1 - Metadata Creation
 
@@ -251,6 +260,9 @@ For security reason the framework will add the integrity info about the installe
 ### Step 3 - Run the update client
 
 See Step 3 of previous examples.
+
+</p>
+</details>
 
 # Security
 
