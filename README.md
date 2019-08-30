@@ -102,13 +102,12 @@ If you now take a look at the current directory you will see that new files were
 </p>
 </details>
 
-
-
-
 ## Example 2
 
 The goal of this example is to show how to use the library in order to create a custom update. The result will be the same as the previous example. You can find the related files in the <a href="https://github.com/enkomio/ProgramUpdater/tree/master/Src/Examples/Example2">Example 2</a> folder.
 
+<details><summary>Details</summary>
+<p>
 ### Step 1 - Metadata Creation
 
 The most common case when you have to generate the metada for a new release is to use the command line utility. If for some reason you want to use the library you must use the **MetadataBuilder** class and specify the working directory where the metadata will be saved.
@@ -160,6 +159,9 @@ if (latestVersion > applicationVersion)
 	}
 }
 ````
+</p>
+</details>
+
 ## Example 3
 
 The goal of this example is to show how to customize the web server. Often the update must be provided only to clients that have the needed authorization, in this example we will see how to authenticate the update requests. You can find the example files in the <a href="https://github.com/enkomio/ProgramUpdater/tree/master/Src/Examples/Example3">Example 3</a> folder.
