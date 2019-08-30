@@ -38,11 +38,13 @@ Below you can find some examples that should provide enough information to use t
 
 The goal of this example is to provide a full update process by only using the commant line utilities. We will suppose that we have four versions of our software and we want to release a new version 5.0. We will use the _update_ directory in order to store the information related to the updates of our software.
 
-### Step 0 - Start up
+<details><summary>Details</summary>
+<p>
+<h3>Step 0 - Start up</h3>
 
 If you have never used the framework to provide updates to your clients, it is a good practice to follow the _Step 1_ for each release of your software, starting from the oldest to the newest.
 
-### Step 1 - Metadata Creation
+<h3>Step 1 - Metadata Creation</h3>
 
 The first step is to create the metadata, this is done with the **VersionReleaser.exe** tool. We run the following command:
 
@@ -59,7 +61,7 @@ Copyright (c) 2019 Enkomio
 ````
 Now the metadata are created and the new artifacts are saved. You can exclude some files from the update process, this is very important for configuration file or local database. You can configure the patterns of the files to exclude in the **configuration.json** file. The current list can be found <a href="https://github.com/enkomio/ProgramUpdater/blob/master/Src/VersionReleaser/configuration.json">here</a>.
 
-### Step 2 - Start the update server
+<h3>Step 2 - Start the update server</h3>
 
 Now you have to start the update server. The framework provides a program named **UpdateServer.exe** that will run a web server in order to accept update requests. You can do this with the following command:
 ````bash
@@ -79,7 +81,7 @@ Copyright (c) 2019 Enkomio
 ````
 The server recognizes that we defined five applications. It is also very important to take note of the *public key*. This value must be set in the client in order to ensure the integrity of the updates.
 
-### Step 3 - Run the update client
+<h3>Step 3 - Run the update client</h3>
 
 The final step of this example is to update the client code by connecting to the server. In order to do this, it is necessary to specify the following information:
 
@@ -97,6 +99,11 @@ Copyright (c) 2019 Enkomio
 [INFO] 2019-08-13 14:31:28 - Project 'MyApplication' was updated to version '5.0' in directory: .
 ````
 If you now take a look at the current directory you will see that new files were created due to the update process.
+</p>
+</details>
+
+
+
 
 ## Example 2
 
