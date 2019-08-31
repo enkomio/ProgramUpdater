@@ -12,6 +12,30 @@ It was created with the following intents:
 
 A pre-compiled file of the framework can be downloaded from the <a href="https://github.com/enkomio/ProgramUpdater/releases/latest">Release section</a>.
 
+## Resolving _Could not load file or assembly FSharp.Core_
+
+If your project uses a different **FSharp.Core** version you may encounter the following error on startup:
+
+````
+System.IO.FileLoadException: 'Could not load file or assembly 'FSharp.Core, Version=4.6.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a' or one of its dependencies. The located assembly's manifest definition does not match the assembly reference. (Exception from HRESULT: 0x80131040)'
+````
+
+In order to solve it you have to modify your **App.config** configuration file in order to add a redirect. For example, if your are using **FSharp.Core version 4.5.0.0** you may want to add the following content to the **App.config** file:
+
+````xml
+<?xml version="1.0" encoding="utf-8" ?>
+<configuration>
+  <runtime>
+    <assemblyBinding xmlns="urn:schemas-microsoft-com:asm.v1">
+      <dependentAssembly>
+        <assemblyIdentity name="FSharp.Core" publicKeyToken="b03f5f7f11d50a3a" culture="neutral" />
+        <bindingRedirect oldVersion="0.0.0.0-4.6.0.0" newVersion="4.6.0.0" />
+      </dependentAssembly>
+    </assemblyBinding>
+  </runtime>
+</configuration>
+````
+
 ## Core Concepts
 
 The framework can be used via the command line tools or by integrating it in your web application. In both cases the process to release a new update is composed of the following three steps:
