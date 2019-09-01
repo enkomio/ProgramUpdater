@@ -12,6 +12,30 @@ It was created with the following intents:
 
 A pre-compiled file of the framework can be downloaded from the <a href="https://github.com/enkomio/ProgramUpdater/releases/latest">Release section</a>.
 
+## Resolving _Could not load file or assembly FSharp.Core_
+
+If your project uses a different **FSharp.Core** version you may encounter the following error on startup:
+
+````
+System.IO.FileLoadException: 'Could not load file or assembly 'FSharp.Core, Version=4.6.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a' or one of its dependencies. The located assembly's manifest definition does not match the assembly reference. (Exception from HRESULT: 0x80131040)'
+````
+
+In order to solve it you have to modify your **App.config** configuration file in order to add a redirect. For example, if your are using **FSharp.Core version 4.5.0.0** you may want to add the following content to the **App.config** file:
+
+````xml
+<?xml version="1.0" encoding="utf-8" ?>
+<configuration>
+  <runtime>
+    <assemblyBinding xmlns="urn:schemas-microsoft-com:asm.v1">
+      <dependentAssembly>
+        <assemblyIdentity name="FSharp.Core" publicKeyToken="b03f5f7f11d50a3a" culture="neutral" />
+        <bindingRedirect oldVersion="0.0.0.0-4.6.0.0" newVersion="4.5.0.0" />
+      </dependentAssembly>
+    </assemblyBinding>
+  </runtime>
+</configuration>
+````
+
 ## Core Concepts
 
 The framework can be used via the command line tools or by integrating it in your web application. In both cases the process to release a new update is composed of the following three steps:
@@ -38,11 +62,13 @@ Below you can find some examples that should provide enough information to use t
 
 The goal of this example is to provide a full update process by only using the commant line utilities. We will suppose that we have four versions of our software and we want to release a new version 5.0. We will use the _update_ directory in order to store the information related to the updates of our software.
 
-### Step 0 - Start up
+<details><summary>Details</summary>
+<p>
+<h3>Step 0 - Start up</h3>
 
 If you have never used the framework to provide updates to your clients, it is a good practice to follow the _Step 1_ for each release of your software, starting from the oldest to the newest.
 
-### Step 1 - Metadata Creation
+<h3>Step 1 - Metadata Creation</h3>
 
 The first step is to create the metadata, this is done with the **VersionReleaser.exe** tool. We run the following command:
 
@@ -59,7 +85,7 @@ Copyright (c) 2019 Enkomio
 ````
 Now the metadata are created and the new artifacts are saved. You can exclude some files from the update process, this is very important for configuration file or local database. You can configure the patterns of the files to exclude in the **configuration.json** file. The current list can be found <a href="https://github.com/enkomio/ProgramUpdater/blob/master/Src/VersionReleaser/configuration.json">here</a>.
 
-### Step 2 - Start the update server
+<h3>Step 2 - Start the update server</h3>
 
 Now you have to start the update server. The framework provides a program named **UpdateServer.exe** that will run a web server in order to accept update requests. You can do this with the following command:
 ````bash
@@ -79,7 +105,7 @@ Copyright (c) 2019 Enkomio
 ````
 The server recognizes that we defined five applications. It is also very important to take note of the *public key*. This value must be set in the client in order to ensure the integrity of the updates.
 
-### Step 3 - Run the update client
+<h3>Step 3 - Run the update client</h3>
 
 The final step of this example is to update the client code by connecting to the server. In order to do this, it is necessary to specify the following information:
 
@@ -97,11 +123,16 @@ Copyright (c) 2019 Enkomio
 [INFO] 2019-08-13 14:31:28 - Project 'MyApplication' was updated to version '5.0' in directory: .
 ````
 If you now take a look at the current directory you will see that new files were created due to the update process.
+</p>
+</details>
 
 ## Example 2
 
 The goal of this example is to show how to use the library in order to create a custom update. The result will be the same as the previous example. You can find the related files in the <a href="https://github.com/enkomio/ProgramUpdater/tree/master/Src/Examples/Example2">Example 2</a> folder.
 
+<details><summary>Details</summary>
+<p>
+	
 ### Step 1 - Metadata Creation
 
 The most common case when you have to generate the metada for a new release is to use the command line utility. If for some reason you want to use the library you must use the **MetadataBuilder** class and specify the working directory where the metadata will be saved.
@@ -153,10 +184,15 @@ if (latestVersion > applicationVersion)
 	}
 }
 ````
+</p>
+</details>
+
 ## Example 3
 
 The goal of this example is to show how to customize the web server. Often the update must be provided only to clients that have the needed authorization, in this example we will see how to authenticate the update requests. You can find the example files in the <a href="https://github.com/enkomio/ProgramUpdater/tree/master/Src/Examples/Example3">Example 3</a> folder.
 
+<details><summary>Details</summary>
+<p>
 
 ### Step 0 - Installing dependency
 
@@ -207,9 +243,15 @@ The specified parameters will be added to the update request and will be used to
 
 <a href="https://github.com/enkomio/ProgramUpdater/blob/master/Src/Examples/Example3/Client.cs#L15">Here</a> you can find the full source code of the **Client** class.
 
+</p>
+</details>
+
 ## Example 4
 
 The goal of this example is to provide a flexible update method by invoking an external program to do the update. Often the update method is not just a matter of copy the files to the destination directory but other, more complex, tasks must be done. The full source code of this example can be find in the <a href="https://github.com/enkomio/ProgramUpdater/tree/master/Src/Examples/Example4">Example 4 folder</a>.
+
+<details><summary>Details</summary>
+<p>
 
 In version 1.1 was released a new feature that allows to invoke an external program in order to do the installation. The framework provides an **Installer** program that copy the files to a destination directory. Using this approach is the suggested one, since it will avoid to have update problems when you have to update the current running program (you cannot write on a file associated to a running process). In order achieve this, when an external Installer is used, the update process is terminated in order to avoid conflict. If you want to be sure that the parent exited just wait on the mutex name composed from the arguments hashes, to know more take a look at the <a href="https://github.com/enkomio/ProgramUpdater/blob/master/Src/Installer/Program.fs#L51">mutex name generation code<a/>.
 
@@ -242,6 +284,9 @@ For security reason the framework will add the integrity info about the installe
 ### Step 3 - Run the update client
 
 See Step 3 of previous examples.
+
+</p>
+</details>
 
 # Security
 
