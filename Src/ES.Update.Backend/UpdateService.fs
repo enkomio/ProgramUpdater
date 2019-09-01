@@ -35,9 +35,9 @@ type UpdateService(workspaceDirectory: String, privateKey: Byte array) =
         )        
         _timer.Start()
 
-    do
+    do        
+        _timer.Interval <- TimeSpan.FromMinutes(1.).TotalMilliseconds |> float
         _timer.Elapsed.Add(fun _ -> doUpdate())
-        _timer.Interval <- TimeSpan.FromMinutes(1.).Milliseconds |> float
         doUpdate()
         
     member this.GetAvailableVersions() =
