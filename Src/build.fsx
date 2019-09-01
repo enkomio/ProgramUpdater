@@ -143,13 +143,13 @@ Core.Target.create "Release" (fun _ ->
     let releaseDirectory = Path.Combine(releaseDir, String.Format("{0}.v{1}", projectFileName, releaseVersion))
     Directory.CreateDirectory(releaseDirectory) |> ignore
         
+    // copy all binaries in Bin directory
     fsharpProjects@csharpProjects
     |> List.iter(fun projName -> 
         let buildProjectDir = Path.Combine(buildDir, projName)
-        let releaseProjectDir = Path.Combine(releaseDirectory, projName)
-        Shell.copyDir releaseProjectDir buildProjectDir (fun _ -> true)
+        Shell.copyDir releaseDirectory buildProjectDir (fun _ -> true)
     )
-    
+        
     // create zip file
     let releaseFilename = releaseDirectory + ".zip"
     Directory.GetFiles(releaseDirectory, "*.*", SearchOption.AllDirectories)
