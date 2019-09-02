@@ -16,7 +16,7 @@ namespace Example3
             // add username and password to the update request
             updater.AddParameter("username", AuthenticatedWebServer.Username);
             updater.AddParameter("password", AuthenticatedWebServer.Password);
-
+            
             var latestVersion = updater.GetLatestVersion();
             Console.WriteLine("My version: {0}. Latest version: {1}", myVersion, latestVersion);
 

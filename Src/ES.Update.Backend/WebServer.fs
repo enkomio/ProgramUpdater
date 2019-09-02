@@ -16,7 +16,7 @@ open ES.Fslog
 
 type WebServer(binding: Uri, workspaceDirectory: String, privateKey: Byte array, logProvider: ILogProvider) as this =
     let _shutdownToken = new CancellationTokenSource()
-    let _updateService = new UpdateService(workspaceDirectory, privateKey)
+    let _updateService = new UpdateService(workspaceDirectory, privateKey, logProvider)
     let _logger = new WebServerLogger()
         
     let preFilter (oldCtx: HttpContext) = async {   

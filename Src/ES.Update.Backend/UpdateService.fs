@@ -4,11 +4,21 @@ open System
 open System.Timers
 open System.IO
 open System.Collections.Concurrent
+open Suave.Logging
+open ES.Fslog
 
-type UpdateService(workspaceDirectory: String, privateKey: Byte array) =
+type UpdateService(workspaceDirectory: String, privateKey: Byte array, logProvider: ILogProvider) =
     let _lock = new Object() 
     let _timer = new Timer()
     let _updateManagers = new ConcurrentDictionary<String, UpdateManager>()
+
+    let _logger =
+        log "UpdateService"
+        |> info "NoInstaller" "No installer path defined, use a standard copy"
+        |> info "Installer" "Use installer from path: {0}"
+        |> info "CreateZipFile" "Created zip file: {0}"
+        |> info "ZipFileAlreadyPresent" "Zip file already present, use file from: {0}"
+        |> buildAndAdd logProvider
 
     let getUpdateManager(projectName: String) =
         _updateManagers.[projectName]
@@ -80,12 +90,19 @@ type UpdateService(workspaceDirectory: String, privateKey: Byte array) =
                 // create the zip file and store it in the appropriate directory            
                 Directory.CreateDirectory(storageDirectory) |> ignore            
                 createZipFile(zipFile, updateFiles, integrityInfo)
+                _logger?CreateZipFile(zipFile)
 
                 // add signature to zip file
                 addSignature(zipFile, privateKey)
 
                 // add installer if necessary
-                if Directory.Exists(installerPath) then addInstaller(zipFile, installerPath, privateKey)
+                if Directory.Exists(installerPath) then 
+                    _logger?Installer(installerPath)
+                    addInstaller(zipFile, installerPath, privateKey)
+                else
+                    _logger?NoInstaller()
+            else
+                _logger?ZipFileAlreadyPresent(zipFile)
         )            
 
         zipFile
