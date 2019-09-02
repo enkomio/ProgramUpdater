@@ -24,7 +24,7 @@ type Installer(destinationDirectory: String) =
         File.WriteAllBytes(destinationFile, content)
 
     let getFiles(fileList: String) =
-        fileList.Split()
+        fileList.Split([|Environment.NewLine|], StringSplitOptions.RemoveEmptyEntries)
         |> Array.filter(String.IsNullOrWhiteSpace >> not)
         |> Array.map(fun line -> 
             let items = line.Split([|','|])
