@@ -1,5 +1,6 @@
 ### 1.2.0 - 29/08/2019
 * Added timer to avoid to restart program when a new update is available
+* Fixed minor error
 
 ### 1.1.0 - 28/08/2019
 * Improved installer by invoking an external program to avoid conflict on copy.
