@@ -32,7 +32,7 @@ type Installer(destinationDirectory: String, logProvider: ILogProvider) =
         File.WriteAllBytes(destinationFile, content)
 
     let getFiles(fileList: String) =
-        fileList.Split([|Environment.NewLine|], StringSplitOptions.RemoveEmptyEntries)
+        fileList.Split([|'\r'; '\n'|], StringSplitOptions.RemoveEmptyEntries)
         |> Array.filter(String.IsNullOrWhiteSpace >> not)
         |> Array.map(fun line -> 
             let items = line.Split([|','|])
