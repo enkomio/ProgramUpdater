@@ -7,6 +7,7 @@ open System.Diagnostics
 open System.Threading
 open System.Text
 open System.Text.RegularExpressions
+open ES.Fslog
 
 module Program =
     type CLIArguments = 
@@ -44,7 +45,7 @@ module Program =
         Console.WriteLine(body)
 
     let runInstaller(sourceDirectory: String, destinationDirectory: String) =
-        let installer = new Installer(destinationDirectory)
+        let installer = new Installer(destinationDirectory, LogProvider.GetDefault())
         installer.CopyUpdates(sourceDirectory)
 
     let waitForParentCompletation() =
