@@ -48,6 +48,7 @@
     <Compile Include="Utility.fs" />
     <Compile Include="Installer.fs" />
     <Compile Include="Updater.fs" />
+    <None Include="paket.references" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FSharp.Core">
@@ -70,4 +71,18 @@
   <Target Name="AfterBuild">
   </Target>
   -->
+  <ItemGroup>
+    <Reference Include="BouncyCastle.Crypto">
+      <HintPath>..\packages\BouncyCastle\lib\BouncyCastle.Crypto.dll</HintPath>
+      <Private>True</Private>
+      <Paket>True</Paket>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="ES.Fslog">
+      <HintPath>..\packages\FSharpLog\lib\ES.Fslog.dll</HintPath>
+      <Private>True</Private>
+      <Paket>True</Paket>
+    </Reference>
+  </ItemGroup>
 </Project>
