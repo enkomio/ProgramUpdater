@@ -5,6 +5,7 @@ nuget FSharpLog
 nuget Suave
 nuget Newtonsoft.Json
 nuget Argu
+nuget BouncyCastle
 
 group FakeBuild
 	source https://api.nuget.org/v3/index.json
