@@ -6,10 +6,19 @@ open System.Net
 open System.IO
 open System.IO.Compression
 open System.Text
+open ES.Fslog
+open ES.Fslog.Loggers
 
-type Updater(serverUri: Uri, projectName: String, currentVersion: Version, destinationDirectory: String, publicKey: Byte array) =    
+type Updater(serverUri: Uri, projectName: String, currentVersion: Version, destinationDirectory: String, publicKey: Byte array, logProvider: ILogProvider) =
     let mutable _additionalData: Dictionary<String, String> option = None
     
+    let _logger =
+        log "Updater"
+        |> critical "CatalogIntegrityFail" "The integrity check of the catalog failed"
+        |> critical "DownloadError" "Download error: {0}"
+        |> info "DownloadDone" "Updates downloaded to file: {0}"
+        |> buildAndAdd logProvider
+
     let downloadUpdates(resultFile: String) =
         try
             // configure request
@@ -41,7 +50,8 @@ type Updater(serverUri: Uri, projectName: String, currentVersion: Version, desti
             use fileHandle = File.OpenWrite(resultFile)
             responseStream.CopyTo(fileHandle)
             true
-        with _ ->
+        with e ->
+            _logger?DownloadError(e.Message)
             false
 
     let verifyCatalogIntegrity(zipArchive: ZipArchive) =
@@ -57,6 +67,8 @@ type Updater(serverUri: Uri, projectName: String, currentVersion: Version, desti
 
         catalogOk && installerCatalogOk
 
+    new (serverUri: Uri, projectName: String, currentVersion: Version, destinationDirectory: String, publicKey: Byte array) = new Updater(serverUri, projectName, currentVersion, destinationDirectory, publicKey, LogProvider.GetDefault())
+
     member this.AddParameter(name: String, value: String) =
         let dataStorage =
             match _additionalData with
@@ -70,10 +82,11 @@ type Updater(serverUri: Uri, projectName: String, currentVersion: Version, desti
         use zipStream = File.OpenRead(updateFile)
         use zipArchive = new ZipArchive(zipStream, ZipArchiveMode.Read)
         if verifyCatalogIntegrity(zipArchive) then
-            let installer = new Installer(destinationDirectory)
+            let installer = new Installer(destinationDirectory, logProvider)
             let fileList = Utility.readEntry(zipArchive, "catalog")
             installer.InstallUpdate(zipArchive, Encoding.UTF8.GetString(fileList))
         else
+            _logger?CatalogIntegrityFail()
             Error "Integrity check failed"
 
     member this.GetLatestVersion() =
@@ -86,9 +99,11 @@ type Updater(serverUri: Uri, projectName: String, currentVersion: Version, desti
         let resultDirectory = Path.Combine(Path.GetTempPath(), projectName)
         Directory.CreateDirectory(resultDirectory) |> ignore
         let resultFile = Path.Combine(resultDirectory, String.Format("update-{0}.zip", version))
+        if File.Exists(resultFile) then File.Delete(resultFile)
 
         // generate keys, download updates and install them
         if downloadUpdates(resultFile) then
+            _logger?DownloadDone(resultFile)
             let result = 
                 match this.InstallUpdates(resultFile) with
                 | Ok _ -> new Result(true)

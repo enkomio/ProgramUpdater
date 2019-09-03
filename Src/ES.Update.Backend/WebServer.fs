@@ -75,7 +75,7 @@ type WebServer(binding: Uri, workspaceDirectory: String, privateKey: Byte array,
             cancellationToken = _shutdownToken.Token
         }
 
-    new (binding: Uri, workspaceDirectory: String, privateKey: Byte array) = new WebServer(binding, workspaceDirectory, privateKey, new LogProvider())
+    new (binding: Uri, workspaceDirectory: String, privateKey: Byte array) = new WebServer(binding, workspaceDirectory, privateKey, LogProvider.GetDefault())
 
     /// This parameter can specify a uri path prefix to use when invoking endpoints
     member val PathPrefix = String.Empty with get, set

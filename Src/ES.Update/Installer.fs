@@ -8,11 +8,19 @@ open System.Text
 open System.Threading
 open System.Reflection
 open System.Text.RegularExpressions
+open ES.Fslog
 
 module AbbandonedMutex =
     let mutable mutex: Mutex option = None
 
-type Installer(destinationDirectory: String) =    
+type Installer(destinationDirectory: String, logProvider: ILogProvider) =    
+    let _logger =
+        log "Installer"
+        |> info "ZipExtracted" "Update zip extracted to: {0}"
+        |> info "RunInstaller" "Execute the configured installer"
+        |> info "FilesCopied" "All update files were copied to: {0}"
+        |> critical "InstallerIntegrityFail" "The integrity check of the installer failed"
+        |> buildAndAdd logProvider
 
     let compareHash(hashValue: String, content: Byte array) =
         let computedHashValue = CryptoUtility.sha256(content)
@@ -56,7 +64,9 @@ type Installer(destinationDirectory: String) =
         )
         |> fun result ->
             if result then Ok ()
-            else Error("Integrity check failed on file: " + integrityFailedOnFile)
+            else 
+                _logger?InstallerIntegrityFail()
+                Error("Integrity check failed on file: " + integrityFailedOnFile)
 
     let extractZip(zipArchive: ZipArchive, destinationDirectory: String) =
         Directory.CreateDirectory(destinationDirectory) |> ignore
@@ -99,6 +109,7 @@ type Installer(destinationDirectory: String) =
                 )
             
             createInstallerMutex(argumentString)            
+            _logger?RunInstaller()
 
             Process.Start(
                 new ProcessStartInfo(
@@ -117,6 +128,7 @@ type Installer(destinationDirectory: String) =
         else 
             let files = getFiles(fileList)
             copyAllFiles(extractedDirectory, files)
+            _logger?FilesCopied(extractedDirectory)
 
             // cleanup spurious files
             Directory.Delete(extractedDirectory, true)
@@ -130,6 +142,7 @@ type Installer(destinationDirectory: String) =
     member this.InstallUpdate(zipArchive: ZipArchive, fileList: String) =
         let tempDir = Path.Combine(Path.GetTempPath(), fileList |> Encoding.UTF8.GetBytes |> sha256)
         let extractedDirectory = extractZip(zipArchive, tempDir)
+        _logger?ZipExtracted(extractedDirectory)
 
         // install
         let result =
