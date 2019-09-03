@@ -6,23 +6,47 @@ open System.IO
 
 [<AutoOpen>]
 module CryptoUtility =
+    open Org.BouncyCastle.Crypto.Generators
+    open Org.BouncyCastle.Crypto.Parameters
+    open Org.BouncyCastle.Asn1.X9
+    open Org.BouncyCastle.Security
+    open Org.BouncyCastle.Pkcs
+    open Org.BouncyCastle.X509
+    open Org.BouncyCastle.Math
+    open Org.BouncyCastle.Crypto
 
     [<CompiledName("GenerateKeys")>]
     let generateKeys() =
-        use dsa = new ECDsaCng(HashAlgorithm = CngAlgorithm.Sha256)
-        let publicKey = dsa.Key.Export(CngKeyBlobFormat.EccPublicBlob)
-        let privateKey = dsa.Key.Export(CngKeyBlobFormat.EccPrivateBlob)        
-        (publicKey, privateKey)
+        let ecSpec = ECNamedCurveTable.GetOid("prime256v1")
+        let gen = new ECKeyPairGenerator("ECDSA")
+        let keyGenParam = new ECKeyGenerationParameters(ecSpec, new SecureRandom())
+        gen.Init(keyGenParam)
+        let keyPair = gen.GenerateKeyPair()
+        
+        // public key
+        let publicKey = keyPair.Public :?> ECPublicKeyParameters
+        let publicKeyBytes = SubjectPublicKeyInfoFactory.CreateSubjectPublicKeyInfo(publicKey).GetDerEncoded()
+        
+        // private key
+        let privatekey = keyPair.Private :?> ECPrivateKeyParameters
+        let pkinfo = PrivateKeyInfoFactory.CreatePrivateKeyInfo(privatekey)
+        let privatekeyBytes = pkinfo.GetDerEncoded()
+
+        (publicKeyBytes, privatekeyBytes)
 
     let sign(data: Byte array, privateKey: Byte array) =
-        use cngKey = CngKey.Import(privateKey, CngKeyBlobFormat.EccPrivateBlob)
-        use dsa = new ECDsaCng(cngKey)
-        dsa.SignData(data)
+        let privateKey = PrivateKeyFactory.CreateKey(privateKey)
+        let signer  = SignerUtilities.GetSigner("SHA256withECDSA")
+        signer.Init(true, privateKey)
+        signer.BlockUpdate(data, 0, data.Length)
+        signer.GenerateSignature()
 
     let verifySignature(data: Byte array, signature: Byte array, publicKey: Byte array) =
-        use cngKey = CngKey.Import(publicKey, CngKeyBlobFormat.EccPublicBlob)
-        use dsa = new ECDsaCng(cngKey)
-        dsa.VerifyData(data, signature)
+        let bpubKey = PublicKeyFactory.CreateKey(publicKey) :?> ECPublicKeyParameters
+        let signer  = SignerUtilities.GetSigner("SHA256withECDSA")
+        signer.Init (false, bpubKey)        
+        signer.BlockUpdate (data, 0, data.Length)
+        signer.VerifySignature(signature)
 
     let sha256Raw(content: Byte array) =        
         use sha = new SHA256Managed()
