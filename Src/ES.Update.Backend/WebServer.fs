@@ -61,7 +61,7 @@ type WebServer(binding: Uri, workspaceDirectory: String, privateKey: Byte array,
             >=> sendFile signedZip false
             <| ctx
         | _ -> 
-            BAD_REQUEST String.Empty ctx
+            BAD_REQUEST "Missing parameters" ctx
 
     let authorize (webPart: WebPart) (ctx: HttpContext) =
         if this.Authenticate(ctx)

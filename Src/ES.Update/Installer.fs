@@ -19,6 +19,7 @@ type Installer(destinationDirectory: String, logProvider: ILogProvider) =
         |> info "ZipExtracted" "Update zip extracted to: {0}"
         |> info "RunInstaller" "Execute the configured installer"
         |> info "FilesCopied" "All update files were copied to: {0}"
+        |> verbose "InstallerProcess" "Execute: {0} {1}"
         |> critical "InstallerIntegrityFail" "The integrity check of the installer failed"
         |> buildAndAdd logProvider
 
@@ -110,6 +111,7 @@ type Installer(destinationDirectory: String, logProvider: ILogProvider) =
             
             createInstallerMutex(argumentString)            
             _logger?RunInstaller()
+            _logger?InstallerProcess(installerProgram, argumentString)
 
             Process.Start(
                 new ProcessStartInfo(
