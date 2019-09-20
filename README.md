@@ -260,9 +260,7 @@ Of course you can use your own installer program, you have just to add it to the
 * The name of the installer program must be **Installer.exe**
 * It accepts the following arguments: 
     * **--source** that is the directory where the new files  are stored 
-    * **--dest** that is the directory that must be updated with the new files
-    * **--exec** the full path of an application to run after that the installation process is completed. If empty no program will be invoked
-    * **--args** an optional srgument string to pass to the program to invoke after installation.
+    * **--dest** that is the directory that must be updated with the new files   
 
 ### Step 1 - Metadata Creation
 
