@@ -100,14 +100,7 @@ type Installer(destinationDirectory: String, logProvider: ILogProvider) =
     let runInstaller(installerProgram: String, extractedDirectory: String) =
         match verifyIntegrity(extractedDirectory, "installer-catalog") with
         | Ok _ ->
-            let argumentString = 
-                String.Format(
-                    "--source \"{0}\" --dest \"{1}\" --exec \"{2}\" --args \"{3}\"", 
-                    extractedDirectory, 
-                    destinationDirectory,
-                    Process.GetCurrentProcess().MainModule.FileName,
-                    String.Join(" ", Environment.GetCommandLineArgs() |> Array.skip 1)
-                )
+            let argumentString = String.Format("--source \"{0}\" --dest \"{1}\"", extractedDirectory, destinationDirectory)
             
             createInstallerMutex(argumentString)            
             _logger?RunInstaller()
