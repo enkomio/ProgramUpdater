@@ -25,8 +25,7 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
     <DocumentationFile>bin\$(Configuration)\$(AssemblyName).XML</DocumentationFile>
     <Prefer32Bit>true</Prefer32Bit>
-    <StartArguments>
-    </StartArguments>
+    <StartArguments>--source "C:\Users\s4tan\AppData\Local\Temp\904CCC38E45EDBAB4BFB7E9A179F156CFCAD61CD99CD98877FB8B3EFC32DC5E6" --dest "C:\Workspace\TaipanPro\Baseline\Src\TaipanUpdater\bin\Debug" --verbose</StartArguments>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>

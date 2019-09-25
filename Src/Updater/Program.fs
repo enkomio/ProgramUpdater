@@ -1,6 +1,7 @@
 ﻿namespace Updater
 
 open System
+open System.Collections.Generic
 open Argu
 open System.IO
 open ES.Fslog
@@ -16,6 +17,7 @@ module Program =
         | Server_Uri of uri:String     
         | Project of name:String
         | Server_Key of key:String
+        | Skip_On_Exist of patterns:String
     with
         interface IArgParserTemplate with
             member s.Usage =
@@ -24,6 +26,7 @@ module Program =
                 | Project _ -> "the name of the project that must be updated."
                 | Server_Uri _ -> "the base uri of the update server."
                 | Directory _ -> "the directory where to apply the update. If not specified use the current one."
+                | Skip_On_Exist _ -> "a list of patterns for files fo copy only if not exist (config file, ...)."
                 | Verbose -> "print verbose log messages."
 
     let private _logger =
@@ -61,15 +64,21 @@ module Program =
         logProvider.AddLogger(new FileLogger(logLevel, Path.Combine(path, "updater-client.log")))
         logProvider :> ILogProvider  
 
-    let private doUpdate(currentVersion: Version, baseUri: Uri, projectName: String, serverPublicKey: String, destinationDirectory: String) =
+    let private doUpdate(currentVersion: Version, baseUri: Uri, projectName: String, serverPublicKey: String, destinationDirectory: String, patternsSkipOnExist: String) =
         let updater = 
             new Updater(
                 baseUri, 
                 projectName, 
                 currentVersion, 
                 destinationDirectory,
-                Convert.FromBase64String(serverPublicKey)
+                Convert.FromBase64String(serverPublicKey),
+                PatternsSkipOnExist =
+                    new List<String>(
+                        if String.IsNullOrWhiteSpace(patternsSkipOnExist) then Array.empty
+                        else patternsSkipOnExist.Split([|","|], StringSplitOptions.RemoveEmptyEntries)
+                    )
             )
+
         let latestVersion = updater.GetLatestVersion()
         
         if latestVersion > currentVersion then
@@ -99,7 +108,15 @@ module Program =
                 let projectName = results.GetResult(<@ Project @>, settings.ProjectName)
                 let destinationDirectory = results.GetResult(<@ Directory @>, settings.DestinationDirectory)
                 let serverKey = results.GetResult(<@ Server_Key @>, settings.ServerPublicKey)
-                doUpdate(currentVersion, new Uri(serverUri), projectName, serverKey, destinationDirectory)
+                let patternsSkipOnExist = results.GetResult(<@ Skip_On_Exist @>, settings.PatternsSkipOnExist)
+                doUpdate(
+                    currentVersion, 
+                    new Uri(serverUri), 
+                    projectName, 
+                    serverKey, 
+                    destinationDirectory, 
+                    patternsSkipOnExist
+                )
             0
         with 
             | :? ArguParseException ->

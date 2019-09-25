@@ -1,9 +1,6 @@
 ﻿{
   "WorkspaceDirectory": "updates",
   "PatternToExclude": [
-    ".json$",
-    ".lic",
-    ".db$",
-    ".log$"
+    ".lic"
   ]
 }

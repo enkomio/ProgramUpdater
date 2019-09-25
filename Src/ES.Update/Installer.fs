@@ -6,13 +6,13 @@ open System.IO.Compression
 open System.Diagnostics
 open System.Text
 open System.Threading
-open System.Reflection
+open System.Collections.Generic
 open System.Text.RegularExpressions
 open ES.Fslog
 
 module AbbandonedMutex =
     let mutable mutex: Mutex option = None
-
+    
 type Installer(destinationDirectory: String, logProvider: ILogProvider) =    
     let _logger =
         log "Installer"
@@ -20,6 +20,7 @@ type Installer(destinationDirectory: String, logProvider: ILogProvider) =
         |> info "RunInstaller" "Execute the configured installer"
         |> info "FilesCopied" "All update files were copied to: {0}"
         |> verbose "InstallerProcess" "Execute: {0} {1}"
+        |> verbose "CopyFile" "Copy '{0}' to '{1}'"
         |> critical "InstallerIntegrityFail" "The integrity check of the installer failed"
         |> buildAndAdd logProvider
 
@@ -30,6 +31,7 @@ type Installer(destinationDirectory: String, logProvider: ILogProvider) =
     let copyFile(filePath: String, content: Byte array) =
         let destinationFile = Path.Combine(destinationDirectory, filePath)
         Directory.CreateDirectory(Path.GetDirectoryName(destinationFile)) |> ignore
+        _logger?CopyFile(filePath, destinationFile)
         File.WriteAllBytes(destinationFile, content)
 
     let getFiles(fileList: String) =
@@ -82,8 +84,17 @@ type Installer(destinationDirectory: String, logProvider: ILogProvider) =
 
         destinationDirectory
 
-    let copyAllFiles(extractedDirectory: String, files: (String * String) array) =
+    let skipFile(patternsSkipOnExist: List<String>) (_: String, filePath: String) =
+        if File.Exists(filePath) then
+            // check if it matches the pattern, if so, skip it
+            patternsSkipOnExist
+            |> Seq.exists(fun pattern -> Regex.IsMatch(filePath, pattern) |> not)
+        else
+            true
+
+    let copyAllFiles(extractedDirectory: String, files: (String * String) array, patternsSkipOnExist: List<String>) =
         files
+        |> Array.filter(skipFile patternsSkipOnExist)
         |> Array.iter(fun (hashValue, filePath) ->
             let content = File.ReadAllBytes(Path.Combine(extractedDirectory, hashValue))
             copyFile(filePath, content)
@@ -100,8 +111,15 @@ type Installer(destinationDirectory: String, logProvider: ILogProvider) =
     let runInstaller(installerProgram: String, extractedDirectory: String) =
         match verifyIntegrity(extractedDirectory, "installer-catalog") with
         | Ok _ ->
-            let argumentString = String.Format("--source \"{0}\" --dest \"{1}\"", extractedDirectory, destinationDirectory)
-            
+            let isVerbose =
+                logProvider.GetLoggers()
+                |> Seq.exists(fun logger -> logger.Level = LogLevel.Verbose)
+
+            let argumentString = 
+                if isVerbose 
+                then String.Format("--source \"{0}\" --dest \"{1}\" --verbose", extractedDirectory, destinationDirectory)
+                else String.Format("--source \"{0}\" --dest \"{1}\"", extractedDirectory, destinationDirectory)
+
             createInstallerMutex(argumentString)            
             _logger?RunInstaller()
             _logger?InstallerProcess(installerProgram, argumentString)
@@ -116,23 +134,25 @@ type Installer(destinationDirectory: String, logProvider: ILogProvider) =
         | Error e -> 
             Error e
 
-    let install(extractedDirectory: String, fileList: String) =        
+    let install(extractedDirectory: String, fileList: String, patternsSkipOnExist: List<String>) =
         let installerProgram = Path.Combine(extractedDirectory, "Installer.exe")
         if File.Exists(installerProgram) then 
             runInstaller(installerProgram, extractedDirectory)
         else 
             let files = getFiles(fileList)
-            copyAllFiles(extractedDirectory, files)
+            copyAllFiles(extractedDirectory, files, patternsSkipOnExist)
             _logger?FilesCopied(extractedDirectory)
 
             // cleanup spurious files
             Directory.Delete(extractedDirectory, true)
             Ok ()
 
+    member val PatternsSkipOnExist = new List<String>() with get, set
+
     member this.CopyUpdates(sourceDirectory: String) =
         let catalog = File.ReadAllText(Path.Combine(sourceDirectory, "catalog"))
         let files = getFiles(catalog)
-        copyAllFiles(sourceDirectory, files)
+        copyAllFiles(sourceDirectory, files, this.PatternsSkipOnExist)
 
     member this.InstallUpdate(zipArchive: ZipArchive, fileList: String) =
         let tempDir = Path.Combine(Path.GetTempPath(), fileList |> Encoding.UTF8.GetBytes |> sha256)
@@ -142,7 +162,7 @@ type Installer(destinationDirectory: String, logProvider: ILogProvider) =
         // install
         let result =
             match verifyIntegrity(extractedDirectory, "catalog") with
-            | Ok _ -> install(extractedDirectory, fileList)            
+            | Ok _ -> install(extractedDirectory, fileList, this.PatternsSkipOnExist)            
             | Error e -> Error e
 
         // return

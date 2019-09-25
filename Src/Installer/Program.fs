@@ -8,17 +8,23 @@ open System.Threading
 open System.Text
 open System.Text.RegularExpressions
 open ES.Fslog
+open System.IO
+open System.Reflection
+open ES.Fslog.Loggers
+open ES.Fslog.TextFormatters
 
 module Program =
     type CLIArguments = 
         | Source of path:String
         | Dest of path:String
+        | Verbose
     with
         interface IArgParserTemplate with
             member s.Usage =
                 match s with
                 | Source _ -> "the source directory containing the updated files."
                 | Dest _ -> "the destination directory where the updated files must be copied."
+                | Verbose -> "log verbose messages."
 
     let printColor(msg: String, color: ConsoleColor) =
         Console.ForegroundColor <- color
@@ -40,8 +46,16 @@ module Program =
     let printUsage(body: String) =
         Console.WriteLine(body)
 
-    let runInstaller(sourceDirectory: String, destinationDirectory: String) =
-        let installer = new Installer(destinationDirectory, LogProvider.GetDefault())
+    let private configureLogProvider(destinationDirectory: String, verbose: Boolean) =
+        let path = Path.Combine(Path.GetDirectoryName(destinationDirectory), "installer.log")
+        let logProvider = new LogProvider()  
+        let logLevel = if verbose then LogLevel.Verbose else LogLevel.Informational
+        logProvider.AddLogger(new ConsoleLogger(logLevel, new ConsoleLogFormatter()))
+        logProvider.AddLogger(new FileLogger(logLevel, path))
+        logProvider :> ILogProvider  
+
+    let runInstaller(sourceDirectory: String, destinationDirectory: String, verbose: Boolean) =
+        let installer = new Installer(destinationDirectory, configureLogProvider(destinationDirectory, verbose))
         installer.CopyUpdates(sourceDirectory)
 
     let waitForParentCompletation() =
@@ -60,7 +74,7 @@ module Program =
             let result = mutex.WaitOne(TimeSpan.FromSeconds(10.))
             mutex.ReleaseMutex()
             result
-        with :? AbandonedMutexException -> 
+        with :? AbandonedMutexException ->
             mutex.ReleaseMutex()
             true
 
@@ -82,7 +96,7 @@ module Program =
                 match (sourceDirectory, destinationDirectory) with
                 | (Some sourceDirectory, Some destinationDirectory) ->
                     if waitForParentCompletation() then
-                        runInstaller(sourceDirectory, destinationDirectory)
+                        runInstaller(sourceDirectory, destinationDirectory, results.Contains(<@ Verbose @>))
                         Console.WriteLine("Installation done!")
                         0
                     else

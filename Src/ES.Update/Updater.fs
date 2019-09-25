@@ -69,6 +69,8 @@ type Updater(serverUri: Uri, projectName: String, currentVersion: Version, desti
 
     new (serverUri: Uri, projectName: String, currentVersion: Version, destinationDirectory: String, publicKey: Byte array) = new Updater(serverUri, projectName, currentVersion, destinationDirectory, publicKey, LogProvider.GetDefault())
 
+    member val PatternsSkipOnExist = new List<String>() with get, set
+
     member this.AddParameter(name: String, value: String) =
         let dataStorage =
             match _additionalData with
@@ -82,7 +84,7 @@ type Updater(serverUri: Uri, projectName: String, currentVersion: Version, desti
         use zipStream = File.OpenRead(updateFile)
         use zipArchive = new ZipArchive(zipStream, ZipArchiveMode.Read)
         if verifyCatalogIntegrity(zipArchive) then
-            let installer = new Installer(destinationDirectory, logProvider)
+            let installer = new Installer(destinationDirectory, logProvider, PatternsSkipOnExist = this.PatternsSkipOnExist)
             let fileList = Utility.readEntry(zipArchive, "catalog")
             installer.InstallUpdate(zipArchive, Encoding.UTF8.GetString(fileList))
         else
