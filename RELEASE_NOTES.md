@@ -1,3 +1,8 @@
+### 1.2.1 - 20/09/2019
+* Added --skip-on-exist option to specify patterns for files that must be copied only if not exist
+* Removed args and exec option from installer since considered not very useful
+* Minor improvements
+
 ### 1.2.0 - 29/08/2019
 * Added utility to generate public and private key from command line
 * Added timer to avoid to restart program when a new update is available
