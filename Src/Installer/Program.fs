@@ -26,6 +26,11 @@ module Program =
                 | Dest _ -> "the destination directory where the updated files must be copied."
                 | Verbose -> "log verbose messages."
 
+    let private _logger =
+        log "Installer"
+        |> info "InstallationDone" "The installation is completed"
+        |> build
+
     let printColor(msg: String, color: ConsoleColor) =
         Console.ForegroundColor <- color
         Console.WriteLine(msg)
@@ -54,8 +59,8 @@ module Program =
         logProvider.AddLogger(new FileLogger(logLevel, path))
         logProvider :> ILogProvider  
 
-    let runInstaller(sourceDirectory: String, destinationDirectory: String, verbose: Boolean) =
-        let installer = new Installer(destinationDirectory, configureLogProvider(destinationDirectory, verbose))
+    let runInstaller(sourceDirectory: String, destinationDirectory: String, logProvider: ILogProvider) =
+        let installer = new Installer(destinationDirectory, logProvider)
         installer.CopyUpdates(sourceDirectory)
 
     let waitForParentCompletation() =
@@ -96,8 +101,10 @@ module Program =
                 match (sourceDirectory, destinationDirectory) with
                 | (Some sourceDirectory, Some destinationDirectory) ->
                     if waitForParentCompletation() then
-                        runInstaller(sourceDirectory, destinationDirectory, results.Contains(<@ Verbose @>))
-                        Console.WriteLine("Installation done!")
+                        let logProvider = configureLogProvider(destinationDirectory, results.Contains(<@ Verbose @>))
+                        logProvider.AddLogSourceToLoggers(_logger)
+                        runInstaller(sourceDirectory, destinationDirectory, logProvider)
+                        _logger?InstallationDone()
                         0
                     else
                         printError("Parent process didn't completed successfully")
