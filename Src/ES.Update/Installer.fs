@@ -107,10 +107,9 @@ type Installer(destinationDirectory: String, logProvider: ILogProvider) =
             |> sha256
             
         AbbandonedMutex.mutex <- Some <| new Mutex(true, mutexName)        
-        
+
     let runInstaller(installerProgram: String, extractedDirectory: String) =
-        match verifyIntegrity(extractedDirectory, "installer-catalog") with
-        | Ok _ ->
+        try
             let isVerbose =
                 logProvider.GetLoggers()
                 |> Seq.exists(fun logger -> logger.Level = LogLevel.Verbose)
@@ -130,14 +129,22 @@ type Installer(destinationDirectory: String, logProvider: ILogProvider) =
                     UseShellExecute = false,
                     Arguments = argumentString
                 )) |> ignore
-            Ok ()
-        | Error e -> 
-            Error e
 
-    let install(extractedDirectory: String, fileList: String, patternsSkipOnExist: List<String>) =
+            Ok ()
+        with e ->
+            Error(e.ToString())
+        
+    let runVerifiedInstaller(installerProgram: String, extractedDirectory: String) =
+        match verifyIntegrity(extractedDirectory, "installer-catalog") with
+        | Ok _ -> runInstaller(installerProgram, extractedDirectory)            
+        | Error e -> Error e
+
+    member private this.DoInstall(extractedDirectory: String, fileList: String, patternsSkipOnExist: List<String>) =
         let installerProgram = Path.Combine(extractedDirectory, "Installer.exe")
         if File.Exists(installerProgram) then 
-            runInstaller(installerProgram, extractedDirectory)
+            if this.SkipIntegrityCheck
+            then runInstaller(installerProgram, extractedDirectory)
+            else runVerifiedInstaller(installerProgram, extractedDirectory)
         else 
             let files = getFiles(fileList)
             copyAllFiles(extractedDirectory, files, patternsSkipOnExist)
@@ -148,6 +155,7 @@ type Installer(destinationDirectory: String, logProvider: ILogProvider) =
             Ok ()
 
     member val PatternsSkipOnExist = new List<String>() with get, set
+    member val SkipIntegrityCheck = false with get, set
 
     member this.CopyUpdates(sourceDirectory: String) =
         let catalog = File.ReadAllText(Path.Combine(sourceDirectory, "catalog"))
@@ -162,7 +170,7 @@ type Installer(destinationDirectory: String, logProvider: ILogProvider) =
         // install
         let result =
             match verifyIntegrity(extractedDirectory, "catalog") with
-            | Ok _ -> install(extractedDirectory, fileList, this.PatternsSkipOnExist)            
+            | Ok _ -> this.DoInstall(extractedDirectory, fileList, this.PatternsSkipOnExist)            
             | Error e -> Error e
 
         // return
