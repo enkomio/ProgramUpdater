@@ -29,6 +29,7 @@ module Program =
     let private _logger =
         log "Installer"
         |> info "InstallationDone" "The installation is completed"
+        |> critical "ParentNotExited" "Parent process didn't completed successfully"
         |> build
 
     let printColor(msg: String, color: ConsoleColor) =
@@ -52,7 +53,7 @@ module Program =
         Console.WriteLine(body)
 
     let private configureLogProvider(destinationDirectory: String, verbose: Boolean) =
-        let path = Path.Combine(Path.GetDirectoryName(destinationDirectory), "installer.log")
+        let path = Path.Combine(destinationDirectory, "installer.log")
         let logProvider = new LogProvider()  
         let logLevel = if verbose then LogLevel.Verbose else LogLevel.Informational
         logProvider.AddLogger(new ConsoleLogger(logLevel, new ConsoleLogFormatter()))
@@ -100,14 +101,14 @@ module Program =
 
                 match (sourceDirectory, destinationDirectory) with
                 | (Some sourceDirectory, Some destinationDirectory) ->
+                    let logProvider = configureLogProvider(destinationDirectory, results.Contains(<@ Verbose @>))
                     if waitForParentCompletation() then
-                        let logProvider = configureLogProvider(destinationDirectory, results.Contains(<@ Verbose @>))
                         logProvider.AddLogSourceToLoggers(_logger)
                         runInstaller(sourceDirectory, destinationDirectory, logProvider)
                         _logger?InstallationDone()
                         0
                     else
-                        printError("Parent process didn't completed successfully")
+                        _logger?ParentNotExited("Parent process didn't completed successfully")
                         1
                 | _ -> 
                     printError("Source or Destination directory not specified")

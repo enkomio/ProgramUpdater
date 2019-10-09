@@ -3,18 +3,15 @@
 open System
 open System.Security.Cryptography
 open System.IO
+open Org.BouncyCastle.Crypto.Generators
+open Org.BouncyCastle.Crypto.Parameters
+open Org.BouncyCastle.Asn1.X9
+open Org.BouncyCastle.Security
+open Org.BouncyCastle.Pkcs
+open Org.BouncyCastle.X509
 
 [<AutoOpen>]
 module CryptoUtility =
-    open Org.BouncyCastle.Crypto.Generators
-    open Org.BouncyCastle.Crypto.Parameters
-    open Org.BouncyCastle.Asn1.X9
-    open Org.BouncyCastle.Security
-    open Org.BouncyCastle.Pkcs
-    open Org.BouncyCastle.X509
-    open Org.BouncyCastle.Math
-    open Org.BouncyCastle.Crypto
-
     [<CompiledName("GenerateKeys")>]
     let generateKeys() =
         let ecSpec = ECNamedCurveTable.GetOid("prime256v1")
