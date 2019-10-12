@@ -84,6 +84,11 @@ module Program =
             mutex.ReleaseMutex()
             true
 
+    let normalizeDestinationDirectory(destinationDirectory: String) =
+        if destinationDirectory.EndsWith(string Path.PathSeparator)
+        then destinationDirectory
+        else destinationDirectory + string Path.PathSeparator
+
     [<EntryPoint>]
     let main argv = 
         printBanner()
@@ -100,7 +105,8 @@ module Program =
                 let destinationDirectory = results.TryGetResult(<@ Dest @>)
 
                 match (sourceDirectory, destinationDirectory) with
-                | (Some sourceDirectory, Some destinationDirectory) ->
+                | (Some sourceDirectory, Some rawDestinationDirectory) ->
+                    let destinationDirectory = normalizeDestinationDirectory(rawDestinationDirectory)
                     let logProvider = configureLogProvider(destinationDirectory, results.Contains(<@ Verbose @>))
                     if waitForParentCompletation() then
                         logProvider.AddLogSourceToLoggers(_logger)
