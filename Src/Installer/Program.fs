@@ -85,9 +85,9 @@ module Program =
             true
 
     let normalizeDestinationDirectory(destinationDirectory: String) =
-        if destinationDirectory.EndsWith(string Path.PathSeparator)
+        if destinationDirectory.EndsWith(string Path.DirectorySeparatorChar)
         then destinationDirectory
-        else destinationDirectory + string Path.PathSeparator
+        else destinationDirectory + string Path.DirectorySeparatorChar
 
     [<EntryPoint>]
     let main argv = 
