@@ -139,6 +139,15 @@ Core.Target.create "Compile" (fun _ ->
     )
 )
 
+Core.Target.create "CleanBuild" (fun _ ->
+    Directory.GetFiles(buildDir, "*.*", SearchOption.AllDirectories)  
+    |> Array.filter(fun file ->
+        forbiddenExtensions
+        |> List.contains (Path.GetExtension(file).ToLowerInvariant())
+    )
+    |> Array.iter(File.Delete)
+)
+
 Core.Target.create "Release" (fun _ ->
     let releaseDirectory = Path.Combine(releaseDir, String.Format("{0}.v{1}", projectFileName, releaseVersion))
     Directory.CreateDirectory(releaseDirectory) |> ignore
@@ -152,18 +161,14 @@ Core.Target.create "Release" (fun _ ->
         
     // create zip file
     let releaseFilename = releaseDirectory + ".zip"
-    Directory.GetFiles(releaseDirectory, "*.*", SearchOption.AllDirectories)
-    |> Array.filter(fun file ->
-        forbiddenExtensions
-        |> List.contains (Path.GetExtension(file).ToLowerInvariant())
-        |> not
-    )
+    Directory.GetFiles(releaseDirectory, "*.*", SearchOption.AllDirectories)    
     |> Fake.IO.Zip.zip releaseDirectory releaseFilename
 )
 
 "Clean"        
     ==> "SetAssemblyInfo"
     ==> "Compile" 
+    ==> "CleanBuild"
     ==> "Release"
     
 // Start build
