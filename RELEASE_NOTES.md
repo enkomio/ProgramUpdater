@@ -1,5 +1,6 @@
-### 1.2.1 - 20/09/2019
-* Added --skip-on-exist option to specify patterns for files that must be copied only if not exist
+### 1.3 - 20/09/2019
+* Added --skip-on-exist option to Updater.exe to specify patterns for files that must be copied only if not exist
+* Added SkipIntegrityCheck property to Updater class to ignore integrity check (useful during development)
 * Removed args and exec option from installer since considered not very useful
 * Minor improvements
 
