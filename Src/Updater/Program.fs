@@ -109,14 +109,18 @@ module Program =
                 let destinationDirectory = results.GetResult(<@ Directory @>, settings.DestinationDirectory)
                 let serverKey = results.GetResult(<@ Server_Key @>, settings.ServerPublicKey)
                 let patternsSkipOnExist = results.GetResult(<@ Skip_On_Exist @>, settings.PatternsSkipOnExist)
-                doUpdate(
-                    currentVersion, 
-                    new Uri(serverUri), 
-                    projectName, 
-                    serverKey, 
-                    destinationDirectory, 
-                    patternsSkipOnExist
-                )
+
+                if String.IsNullOrWhiteSpace(serverUri) then 
+                    printUsage(parser.PrintUsage())
+                else
+                    doUpdate(
+                        currentVersion, 
+                        new Uri(serverUri), 
+                        projectName, 
+                        serverKey, 
+                        destinationDirectory, 
+                        patternsSkipOnExist
+                    )
             0
         with 
             | :? ArguParseException ->
