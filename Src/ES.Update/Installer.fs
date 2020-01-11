@@ -108,44 +108,54 @@ type Installer(destinationDirectory: String, logProvider: ILogProvider) =
             
         AbbandonedMutex.mutex <- Some <| new Mutex(true, mutexName)        
 
-    let runInstaller(installerProgram: String, extractedDirectory: String) =
-        try
-            let isVerbose =
-                logProvider.GetLoggers()
-                |> Seq.exists(fun logger -> logger.Level = LogLevel.Verbose)
-
-            let argumentString = 
-                if isVerbose 
-                then String.Format("--source \"{0}\" --dest \"{1}\" --verbose", extractedDirectory, destinationDirectory)
-                else String.Format("--source \"{0}\" --dest \"{1}\"", extractedDirectory, destinationDirectory)
-
-            createInstallerMutex(argumentString)            
+    let runInstaller(processInfo: ProcessStartInfo) =
+        try            
+            createInstallerMutex(processInfo.Arguments)            
             _logger?RunInstaller()
-            _logger?InstallerProcess(installerProgram, argumentString)
-
-            Process.Start(
-                new ProcessStartInfo(
-                    FileName = installerProgram,
-                    UseShellExecute = false,
-                    Arguments = argumentString
-                )) |> ignore
-
+            _logger?InstallerProcess(processInfo.FileName, processInfo.Arguments)
+            Process.Start(processInfo) |> ignore
             Ok ()
         with e ->
             Error(e.ToString())
+
+    let buildProcessObject(extractedDirectory: String) =
+        let isVerbose =
+            logProvider.GetLoggers()
+            |> Seq.exists(fun logger -> logger.Level = LogLevel.Verbose)
         
-    let runVerifiedInstaller(installerProgram: String, extractedDirectory: String) =
+        let baseArgumentString =
+            if isVerbose 
+            then String.Format("--source \"{0}\" --dest \"{1}\" --verbose", extractedDirectory, destinationDirectory)
+            else String.Format("--source \"{0}\" --dest \"{1}\"", extractedDirectory, destinationDirectory)
+
+        let exeInstaller = Path.Combine(extractedDirectory, "Installer.exe")
+        let dllInstaller = Path.Combine(extractedDirectory, "Installer.dll")
+
+        if File.Exists(exeInstaller) then Some(exeInstaller, baseArgumentString)
+        elif File.Exists(dllInstaller) then Some("dotnet", String.Format("{0} {1}", dllInstaller, baseArgumentString))
+        else None
+        |> function
+            | Some (installer, argumentString) ->
+                new ProcessStartInfo(
+                    FileName = installer,
+                    UseShellExecute = false,
+                    Arguments = argumentString
+                )
+                |> Some
+            | None -> None        
+        
+    let runVerifiedInstaller(processInfo, extractedDirectory: String) =
         match verifyIntegrity(extractedDirectory, "installer-catalog") with
-        | Ok _ -> runInstaller(installerProgram, extractedDirectory)            
+        | Ok _ -> runInstaller(processInfo)            
         | Error e -> Error e
 
     member private this.DoInstall(extractedDirectory: String, fileList: String, patternsSkipOnExist: List<String>) =
-        let installerProgram = Path.Combine(extractedDirectory, "Installer.exe")
-        if File.Exists(installerProgram) then 
+        match buildProcessObject(extractedDirectory) with
+        | Some processInfo ->
             if this.SkipIntegrityCheck
-            then runInstaller(installerProgram, extractedDirectory)
-            else runVerifiedInstaller(installerProgram, extractedDirectory)
-        else 
+            then runInstaller(processInfo)
+            else runVerifiedInstaller(processInfo, extractedDirectory)
+        | None ->
             let files = getFiles(fileList)
             copyAllFiles(extractedDirectory, files, patternsSkipOnExist)
             _logger?FilesCopied(extractedDirectory)
