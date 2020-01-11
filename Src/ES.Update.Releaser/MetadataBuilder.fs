@@ -17,6 +17,7 @@ type MetadataBuilder(workingDirectory: String, patternsToExclude: List<String>, 
         |> info "SavingFiles" "Saving artifacts to update"
         |> info "SavingFile" "Adding new file '{0}' as {1}"
         |> info "Completed" "Process completed"
+        |> info "SkipZipEntry" "Skipped entry '{0}' due to forbidden pattern"
         |> buildAndAdd logProvider
 
     let extractProjectName(releaseFile: String) =        
@@ -44,11 +45,14 @@ type MetadataBuilder(workingDirectory: String, patternsToExclude: List<String>, 
         (new System.IO.Compression.ZipArchive(fileHandle, ZipArchiveMode.Read)).Entries
         |> Seq.toArray
         |> Array.filter(fun zipEntry ->
-            patternsToExclude
-            |> Seq.exists(fun pattern -> Regex.IsMatch(zipEntry.FullName, pattern))
-            |> not
+            let skipZipEntry =
+                patternsToExclude
+                |> Seq.exists(fun pattern -> Regex.IsMatch(zipEntry.FullName, pattern))                
+
+            if skipZipEntry then _logger?SkipZipEntry(zipEntry.FullName)
+            not skipZipEntry
         )
-        |> Array.map(fun zipEntry ->
+        |> Array.map(fun zipEntry ->            
             use zipStream = zipEntry.Open()
             use memStream = new MemoryStream()
             zipStream.CopyTo(memStream)
