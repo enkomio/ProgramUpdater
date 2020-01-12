@@ -6,6 +6,7 @@ nuget Suave
 nuget Newtonsoft.Json
 nuget Argu
 nuget BouncyCastle
+nuget ES.Fslog.Core
 
 group FakeBuild
 	source https://api.nuget.org/v3/index.json
@@ -16,4 +17,4 @@ group FakeBuild
 	nuget Fake.DotNet.AssemblyInfoFile
 	nuget Fake.Core.Trace
 	nuget Fake.IO.Zip
-	nuget Fake.Core.Process
+	nuget Fake.Core.Process	
