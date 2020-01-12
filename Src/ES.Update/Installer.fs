@@ -173,16 +173,13 @@ type Installer(destinationDirectory: String, logProvider: ILogProvider) =
         let files = getFiles(catalog)
         copyAllFiles(sourceDirectory, files, this.PatternsSkipOnExist)
 
-    member this.InstallUpdate(zipArchive: ZipArchive, fileList: String) =
+    member internal this.InstallUpdate(directory: String, fileList: String) =
+        match verifyIntegrity(directory, "catalog") with
+        | Ok _ -> this.DoInstall(directory, fileList, this.PatternsSkipOnExist)            
+        | Error e -> Error e
+
+    member internal this.InstallUpdate(zipArchive: ZipArchive, fileList: String) =
         let tempDir = Path.Combine(Path.GetTempPath(), fileList |> Encoding.UTF8.GetBytes |> sha256)
         let extractedDirectory = extractZip(zipArchive, tempDir)
         _logger?ZipExtracted(extractedDirectory)
-
-        // install
-        let result =
-            match verifyIntegrity(extractedDirectory, "catalog") with
-            | Ok _ -> this.DoInstall(extractedDirectory, fileList, this.PatternsSkipOnExist)            
-            | Error e -> Error e
-
-        // return
-        result
+        this.InstallUpdate(extractedDirectory, fileList)
