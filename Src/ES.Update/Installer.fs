@@ -17,9 +17,9 @@ type Installer(destinationDirectory: String, logProvider: ILogProvider) =
     let _logger =
         log "Installer"
         |> info "ZipExtracted" "Update zip extracted to: {0}"
-        |> info "RunInstaller" "Execute the configured installer"
         |> info "FilesCopied" "All update files were copied to: {0}"
-        |> verbose "InstallerProcess" "Execute: {0} {1}"
+        |> info "RunInstaller" "Run installer: {0} {1}"
+        |> info "NoInstaller" "No installer found in directory '{0}'. Copy files to '{1}'"
         |> verbose "CopyFile" "Copy '{0}' to '{1}'"
         |> critical "InstallerIntegrityFail" "The integrity check of the installer failed"
         |> buildAndAdd logProvider
@@ -110,9 +110,8 @@ type Installer(destinationDirectory: String, logProvider: ILogProvider) =
 
     let runInstaller(processInfo: ProcessStartInfo) =
         try            
-            createInstallerMutex(processInfo.Arguments)            
-            _logger?RunInstaller()
-            _logger?InstallerProcess(processInfo.FileName, processInfo.Arguments)
+            createInstallerMutex(processInfo.Arguments)
+            _logger?RunInstaller(processInfo.FileName, processInfo.Arguments)
             Process.Start(processInfo) |> ignore
             Ok ()
         with e ->
@@ -130,9 +129,9 @@ type Installer(destinationDirectory: String, logProvider: ILogProvider) =
 
         let exeInstaller = Path.Combine(extractedDirectory, "Installer.exe")
         let dllInstaller = Path.Combine(extractedDirectory, "Installer.dll")
-
-        if File.Exists(exeInstaller) then Some(exeInstaller, baseArgumentString)
-        elif File.Exists(dllInstaller) then Some("dotnet", String.Format("{0} {1}", dllInstaller, baseArgumentString))
+                
+        if File.Exists(dllInstaller) then Some("dotnet", String.Format("\"{0}\" {1}", dllInstaller, baseArgumentString))
+        elif File.Exists(exeInstaller) then Some(exeInstaller, baseArgumentString)
         else None
         |> function
             | Some (installer, argumentString) ->
@@ -142,7 +141,9 @@ type Installer(destinationDirectory: String, logProvider: ILogProvider) =
                     Arguments = argumentString
                 )
                 |> Some
-            | None -> None        
+            | None -> 
+                _logger?NoInstaller(extractedDirectory, destinationDirectory)
+                None        
         
     let runVerifiedInstaller(processInfo, extractedDirectory: String) =
         match verifyIntegrity(extractedDirectory, "installer-catalog") with
@@ -158,7 +159,7 @@ type Installer(destinationDirectory: String, logProvider: ILogProvider) =
         | None ->
             let files = getFiles(fileList)
             copyAllFiles(extractedDirectory, files, patternsSkipOnExist)
-            _logger?FilesCopied(extractedDirectory)
+            _logger?FilesCopied(destinationDirectory)
 
             // cleanup spurious files
             Directory.Delete(extractedDirectory, true)
