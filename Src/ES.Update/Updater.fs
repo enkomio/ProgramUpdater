@@ -54,18 +54,23 @@ type Updater(serverUri: Uri, projectName: String, currentVersion: Version, desti
             _logger?DownloadError(e.Message)
             false
 
+    let verifyCatalogContentIntegrity(catalog: Byte array, installerCatalog: (Byte array) option, signature: Byte array, installerSignature: (Byte array) option) =
+        let catalogOk = CryptoUtility.verifySignature(catalog, signature, publicKey)
+        let installerCatalogOk = 
+            match (installerCatalog, installerSignature) with
+            | (Some installerCatalog, Some installerSignature) ->
+                CryptoUtility.verifySignature(installerCatalog, installerSignature, publicKey)
+            | (Some _, None) -> false
+            | (None, Some _) -> false
+            | _ -> true
+        catalogOk && installerCatalogOk  
+
     let verifyCatalogIntegrity(zipArchive: ZipArchive) =
         let catalog = Utility.readEntry(zipArchive, "catalog")
-        let catalogOk = CryptoUtility.verifySignature(catalog, Utility.readEntry(zipArchive, "signature"), publicKey)
-
-        let installerCatalogOk = 
-            match Utility.tryReadEntry(zipArchive, "installer-catalog") with
-            | Some installerCatalog -> 
-                CryptoUtility.verifySignature(installerCatalog, Utility.readEntry(zipArchive, "installer-signature"), publicKey)
-            | None -> 
-                true
-
-        catalogOk && installerCatalogOk
+        let signature = Utility.readEntry(zipArchive, "signature")
+        let installerCatalog = Utility.tryReadEntry(zipArchive, "installer-catalog")
+        let installerSignature = Utility.tryReadEntry(zipArchive, "installer-signature")
+        verifyCatalogContentIntegrity(catalog, installerCatalog, signature, installerSignature)  
 
     new (serverUri: Uri, projectName: String, currentVersion: Version, destinationDirectory: String, publicKey: Byte array) = new Updater(serverUri, projectName, currentVersion, destinationDirectory, publicKey, LogProvider.GetDefault())
 
@@ -80,23 +85,59 @@ type Updater(serverUri: Uri, projectName: String, currentVersion: Version, desti
                 _additionalData.Value
             | Some d -> d
         dataStorage.[name] <- value
-            
-    member this.InstallUpdates(updateFile: String) =
-        use zipStream = File.OpenRead(updateFile)
+
+    member internal this.InstallUpdatesFromFile(file: String, installer: Installer) =
+        use zipStream = File.OpenRead(file)
         use zipArchive = new ZipArchive(zipStream, ZipArchiveMode.Read)
         if this.SkipIntegrityCheck || verifyCatalogIntegrity(zipArchive) then
-            let installer = 
-                new Installer(
-                    destinationDirectory, 
-                    logProvider, 
-                    PatternsSkipOnExist = this.PatternsSkipOnExist,
-                    SkipIntegrityCheck = this.SkipIntegrityCheck
-                )
             let fileList = Utility.readEntry(zipArchive, "catalog")
             installer.InstallUpdate(zipArchive, Encoding.UTF8.GetString(fileList))
         else
             _logger?CatalogIntegrityFail()
             Error "Integrity check failed"
+
+    member internal this.InstallUpdatesFromDirectory(directory: String, installer: Installer) =
+        let fileList = Path.Combine(directory, "catalog") |> File.ReadAllText
+        let mutable integrityCheckOk = true
+
+        // check integrity
+        if not this.SkipIntegrityCheck then            
+            let catalog = Path.Combine(directory, "catalog") |> File.ReadAllBytes
+            let signature = Path.Combine(directory, "signature") |> File.ReadAllBytes
+            let installerCatalogFile =  Path.Combine(directory, "installer-catalog")
+            let installerSignatureFile = Path.Combine(directory, "installer-signature")
+
+            if File.Exists(installerCatalogFile) && File.Exists(installerSignatureFile) then
+                let installerCatalog = File.ReadAllBytes(installerCatalogFile)
+                let installerSignature = File.ReadAllBytes(installerSignatureFile)
+                integrityCheckOk <- verifyCatalogContentIntegrity(catalog, Some installerCatalog, signature, Some installerSignature)
+            elif not(File.Exists(installerCatalogFile)) && not(File.Exists(installerSignatureFile)) then
+                integrityCheckOk <- verifyCatalogContentIntegrity(catalog, None, signature, None)
+            else
+                // do I have an installer and not associated signature or the opposite
+                integrityCheckOk <- false
+
+        if integrityCheckOk then
+            installer.InstallUpdate(directory, fileList)
+        else
+            _logger?CatalogIntegrityFail()
+            Error "Integrity check failed"
+            
+    member this.InstallUpdates(fileOrDirectory: String) =
+        let installer = 
+            new Installer(
+                destinationDirectory, 
+                logProvider, 
+                PatternsSkipOnExist = this.PatternsSkipOnExist,
+                SkipIntegrityCheck = this.SkipIntegrityCheck
+            )
+
+        if Directory.Exists(fileOrDirectory) then
+            this.InstallUpdatesFromDirectory(fileOrDirectory, installer)
+        elif File.Exists(fileOrDirectory) then
+            this.InstallUpdatesFromFile(fileOrDirectory, installer)
+        else
+            Error(String.Format("{0} is not a valid update path", fileOrDirectory))
 
     member this.GetLatestVersion() =
         use webClient = new WebClient()        
