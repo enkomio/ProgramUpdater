@@ -13,7 +13,7 @@ open ES.Fslog
 module AbbandonedMutex =
     let mutable mutex: Mutex option = None
     
-type Installer(destinationDirectory: String, logProvider: ILogProvider) =    
+type Installer(destinationDirectory: String, logProvider: ILogProvider) as this =    
     let _logger =
         log "Installer"
         |> info "ZipExtracted" "Update zip extracted to: {0}"
@@ -21,6 +21,9 @@ type Installer(destinationDirectory: String, logProvider: ILogProvider) =
         |> info "RunInstaller" "Run installer: {0} {1}"
         |> info "NoInstaller" "No installer found in directory '{0}'. Copy files to '{1}'"
         |> verbose "CopyFile" "Copy '{0}' to '{1}'"
+        |> verbose "MoveFile" "Move existing file '{0}' to '{1}'"
+        |> verbose "SkipFile" "Skiped file: {0}"
+        |> verbose "InstallerNotFound" "Installer {0} not found"
         |> critical "InstallerIntegrityFail" "The integrity check of the installer failed"
         |> buildAndAdd logProvider
 
@@ -28,9 +31,19 @@ type Installer(destinationDirectory: String, logProvider: ILogProvider) =
         let computedHashValue = CryptoUtility.sha256(content)
         hashValue.Equals(computedHashValue, StringComparison.OrdinalIgnoreCase)
 
+    let moveFile(destinationFile: String) =
+        let oldFilesDir = Path.Combine(destinationDirectory, "OLD-files")
+        Directory.CreateDirectory(oldFilesDir) |> ignore
+        let copyFile = Path.Combine(oldFilesDir, Path.GetFileName(destinationFile))
+        if not <| File.Exists(copyFile) then
+            _logger?MoveFile(destinationFile, copyFile)
+            File.Move(destinationFile, copyFile)        
+
     let copyFile(filePath: String, content: Byte array) =
         let destinationFile = Path.Combine(destinationDirectory, filePath)
         Directory.CreateDirectory(Path.GetDirectoryName(destinationFile)) |> ignore
+        if File.Exists(destinationFile) then
+            moveFile(destinationFile)
         _logger?CopyFile(filePath, destinationFile)
         File.WriteAllBytes(destinationFile, content)
 
@@ -54,8 +67,7 @@ type Installer(destinationDirectory: String, logProvider: ILogProvider) =
             // try to read the file content via hash or file name (in case of installer)
             let fullFileName =
                 let tmp = Path.Combine(directory, hashValue)
-                if File.Exists(tmp)
-                then tmp
+                if File.Exists(tmp) then tmp
                 else Path.Combine(directory, filePath)
 
             let content = File.ReadAllBytes(fullFileName)
@@ -84,17 +96,20 @@ type Installer(destinationDirectory: String, logProvider: ILogProvider) =
 
         destinationDirectory
 
-    let skipFile(patternsSkipOnExist: List<String>) (_: String, filePath: String) =
-        if File.Exists(filePath) then
+    let isOkToCopy(patternsSkipOnExist: List<String>) (_: String, filePath: String) =
+        if File.Exists(filePath) && patternsSkipOnExist.Count > 0 then
             // check if it matches the pattern, if so, skip it
-            patternsSkipOnExist
-            |> Seq.exists(fun pattern -> Regex.IsMatch(filePath, pattern) |> not)
+            let skipFile =
+                patternsSkipOnExist
+                |> Seq.exists(fun pattern -> Regex.IsMatch(filePath, pattern))
+            if skipFile then _logger?SkipFile(filePath)
+            not skipFile
         else
             true
 
     let copyAllFiles(extractedDirectory: String, files: (String * String) array, patternsSkipOnExist: List<String>) =
         files
-        |> Array.filter(skipFile patternsSkipOnExist)
+        |> Array.filter(isOkToCopy patternsSkipOnExist)
         |> Array.iter(fun (hashValue, filePath) ->
             let content = File.ReadAllBytes(Path.Combine(extractedDirectory, hashValue))
             copyFile(filePath, content)
@@ -121,17 +136,28 @@ type Installer(destinationDirectory: String, logProvider: ILogProvider) =
         let isVerbose =
             logProvider.GetLoggers()
             |> Seq.exists(fun logger -> logger.Level = LogLevel.Verbose)
-        
-        let baseArgumentString =
-            if isVerbose 
-            then String.Format("--source \"{0}\" --dest \"{1}\" --verbose", extractedDirectory, destinationDirectory)
-            else String.Format("--source \"{0}\" --dest \"{1}\"", extractedDirectory, destinationDirectory)
 
-        let exeInstaller = Path.Combine(extractedDirectory, "Installer.exe")
+        let baseArgumentString = new StringBuilder()
+        baseArgumentString.AppendFormat("--source \"{0}\" --dest \"{1}\"", extractedDirectory, destinationDirectory) |> ignore
+        
+        if isVerbose then
+            baseArgumentString.Append(" --verbose") |> ignore
+
+        if not this.RemoveTempFile then
+            baseArgumentString.Append(" --no-clean") |> ignore
+            
         let dllInstaller = Path.Combine(extractedDirectory, "Installer.dll")
+        if not <| File.Exists(dllInstaller) then
+            _logger?InstallerNotFound(dllInstaller)
+
+        let exeInstaller = Path.Combine(extractedDirectory, "Installer.exe")        
+        if not <| File.Exists(dllInstaller) then
+            _logger?InstallerNotFound(exeInstaller)
                 
-        if File.Exists(dllInstaller) then Some("dotnet", String.Format("\"{0}\" {1}", dllInstaller, baseArgumentString))
-        elif File.Exists(exeInstaller) then Some(exeInstaller, baseArgumentString)
+        if File.Exists(dllInstaller) then 
+            Some("dotnet", String.Format("\"{0}\" {1}", dllInstaller, baseArgumentString.ToString()))
+        elif File.Exists(exeInstaller) then 
+            Some(exeInstaller, baseArgumentString.ToString())
         else None
         |> function
             | Some (installer, argumentString) ->
@@ -162,11 +188,12 @@ type Installer(destinationDirectory: String, logProvider: ILogProvider) =
             _logger?FilesCopied(destinationDirectory)
 
             // cleanup spurious files
-            Directory.Delete(extractedDirectory, true)
+            if this.RemoveTempFile then Directory.Delete(extractedDirectory, true)
             Ok ()
 
     member val PatternsSkipOnExist = new List<String>() with get, set
     member val SkipIntegrityCheck = false with get, set
+    member val RemoveTempFile = true with get, set
 
     member this.CopyUpdates(sourceDirectory: String) =
         let catalog = File.ReadAllText(Path.Combine(sourceDirectory, "catalog"))
