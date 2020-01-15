@@ -17,6 +17,7 @@ module Program =
     type CLIArguments = 
         | Source of path:String
         | Dest of path:String
+        | No_Clean
         | Verbose
     with
         interface IArgParserTemplate with
@@ -24,11 +25,13 @@ module Program =
                 match s with
                 | Source _ -> "the source directory containing the updated files."
                 | Dest _ -> "the destination directory where the updated files must be copied."
+                | No_Clean -> "Don't remove temporary artefacts."
                 | Verbose -> "log verbose messages."
 
     let private _logger =
         log "Installer"
         |> info "InstallationDone" "The installation is completed"
+        |> info "Wait" "Wait {0} second/s"
         |> critical "ParentNotExited" "Parent process didn't completed successfully"
         |> build
 
@@ -60,8 +63,9 @@ module Program =
         logProvider.AddLogger(new FileLogger(logLevel, path))
         logProvider :> ILogProvider  
 
-    let runInstaller(sourceDirectory: String, destinationDirectory: String, logProvider: ILogProvider) =
+    let runInstaller(sourceDirectory: String, destinationDirectory: String, dontClean: Boolean, logProvider: ILogProvider) =
         let installer = new Installer(destinationDirectory, logProvider)
+        installer.RemoveTempFile <- not dontClean
         installer.CopyUpdates(sourceDirectory)
 
     let waitForParentCompletation() =
@@ -89,6 +93,12 @@ module Program =
         then destinationDirectory
         else destinationDirectory + string Path.DirectorySeparatorChar
 
+    let wait() =
+        let secondsToWait = 5
+        _logger?Wait(secondsToWait)
+        for i=0 to secondsToWait-1 do            
+            Thread.Sleep(TimeSpan.FromSeconds(1.0))
+
     [<EntryPoint>]
     let main argv = 
         printBanner()
@@ -103,6 +113,7 @@ module Program =
             else
                 let sourceDirectory = results.TryGetResult(<@ Source @>)
                 let destinationDirectory = results.TryGetResult(<@ Dest @>)
+                let dontClean = results.Contains(<@ No_Clean @>)
 
                 match (sourceDirectory, destinationDirectory) with
                 | (Some sourceDirectory, Some rawDestinationDirectory) ->
@@ -110,7 +121,8 @@ module Program =
                     let logProvider = configureLogProvider(destinationDirectory, results.Contains(<@ Verbose @>))
                     if waitForParentCompletation() then
                         logProvider.AddLogSourceToLoggers(_logger)
-                        runInstaller(sourceDirectory, destinationDirectory, logProvider)
+                        wait()
+                        runInstaller(sourceDirectory, destinationDirectory, dontClean, logProvider)
                         _logger?InstallationDone()
                         0
                     else

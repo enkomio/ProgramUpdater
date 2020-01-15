@@ -76,6 +76,7 @@ type Updater(serverUri: Uri, projectName: String, currentVersion: Version, desti
 
     member val PatternsSkipOnExist = new List<String>() with get, set
     member val SkipIntegrityCheck = false with get, set
+    member val RemoveTempFile = true with get, set
 
     member this.AddParameter(name: String, value: String) =
         let dataStorage =
@@ -149,7 +150,7 @@ type Updater(serverUri: Uri, projectName: String, currentVersion: Version, desti
         let resultDirectory = Path.Combine(Path.GetTempPath(), projectName)
         Directory.CreateDirectory(resultDirectory) |> ignore
         let resultFile = Path.Combine(resultDirectory, String.Format("update-{0}.zip", version))
-        if File.Exists(resultFile) then File.Delete(resultFile)
+        if File.Exists(resultFile) && this.RemoveTempFile then File.Delete(resultFile)
 
         // generate keys, download updates and install them
         if downloadUpdates(resultFile) then
@@ -158,7 +159,7 @@ type Updater(serverUri: Uri, projectName: String, currentVersion: Version, desti
                 match this.InstallUpdates(resultFile) with
                 | Ok _ -> new Result(true)
                 | Error msg -> new Result(false, Error = msg)
-            File.Delete(resultFile)
+            if this.RemoveTempFile then File.Delete(resultFile)
             result
         else
             new Result(false, Error = "Unable to download updates")
