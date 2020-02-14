@@ -50,9 +50,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".NET Framework", ".NET Fram
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".NET Core", ".NET Core", "{78BB8FA3-6943-4A89-9FB1-36D21A251DE8}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Installer.Core", "Installer.Core\Installer.Core.fsproj", "{57E8DD8D-7993-4F7D-A2A4-E19779B8EFC2}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Installer.Core", "Installer.Core\Installer.Core.fsproj", "{57E8DD8D-7993-4F7D-A2A4-E19779B8EFC2}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "ES.Update.Core", "ES.Update.Core\ES.Update.Core.fsproj", "{6567FB01-A3FE-47C6-8857-9F0633B0F3D9}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "ES.Update.Core", "ES.Update.Core\ES.Update.Core.fsproj", "{6567FB01-A3FE-47C6-8857-9F0633B0F3D9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
