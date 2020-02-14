@@ -1,37 +1,43 @@
 ﻿namespace ES.Update.Backend
 
 open System
+open System.Timers
 open System.IO
 open System.Text
 open ES.Update.Backend.Entities
 
 type UpdateManager(workingDirectory: String) =
+    let _lock = new Object() 
+    let _timer = new Timer()
     let mutable _applications : Application array = Array.empty
     
     let populateKnowledgeBase() =
-        let versionDir = Path.Combine(workingDirectory, "Versions")
-        if Directory.Exists(versionDir) then
-            _applications <-            
-                Directory.GetFiles(versionDir)
-                |> Array.map(fun fileName ->
-                    {
-                        Version = Version.Parse(Path.GetFileNameWithoutExtension(fileName))
-                        Files =
-                            File.ReadAllLines(fileName)
-                            |> Array.map(fun line -> line.Trim().Split(','))
-                            |> Array.map(fun items -> (items.[0], String.Join(",", items.[1..])))
-                            |> Array.map(fun (hashValue, path) -> {ContentHash = hashValue; Path = path})
-                    }
-                )
+        _timer.Stop()
+        lock _lock (fun () ->
+            let versionDir = Path.Combine(workingDirectory, "Versions")
+            if Directory.Exists(versionDir) then
+                _applications <-            
+                    Directory.GetFiles(versionDir)
+                    |> Array.map(fun fileName ->
+                        {
+                            Version = Version.Parse(Path.GetFileNameWithoutExtension(fileName))
+                            Files =
+                                File.ReadAllLines(fileName)
+                                |> Array.map(fun line -> line.Trim().Split(','))
+                                |> Array.map(fun items -> (items.[0], String.Join(",", items.[1..])))
+                                |> Array.map(fun (hashValue, path) -> {ContentHash = hashValue; Path = path})
+                        }
+                    )
+        )
+        _timer.Start()
 
     do
         if Directory.Exists(workingDirectory) then
             populateKnowledgeBase()
 
             // add directory watcher
-            let watcher = new FileSystemWatcher(workingDirectory)
-            watcher.Changed.Add(fun arg -> if arg.ChangeType = WatcherChangeTypes.Changed then populateKnowledgeBase())
-            watcher.EnableRaisingEvents <- true
+            _timer.Interval <- TimeSpan.FromMinutes(1.).TotalMilliseconds |> float
+            _timer.Elapsed.Add(fun _ -> populateKnowledgeBase())
 
     let getApplicationHashes(application: Application) =
         application.Files |> Array.map(fun file -> file.ContentHash)
