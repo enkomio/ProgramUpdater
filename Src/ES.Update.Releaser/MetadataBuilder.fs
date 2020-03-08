@@ -53,10 +53,14 @@ type MetadataBuilder(workingDirectory: String, patternsToExclude: List<String>, 
             not skipZipEntry
         )
         |> Array.map(fun zipEntry ->            
-            use zipStream = zipEntry.Open()
-            use memStream = new MemoryStream()
-            zipStream.CopyTo(memStream)
-            (zipEntry.FullName, CryptoUtility.sha256(memStream.ToArray()))
+            // check if it is a directory
+            if String.IsNullOrEmpty(zipEntry.Name) && (zipEntry.FullName.EndsWith('/') || zipEntry.FullName.EndsWith('\\')) then
+                (zipEntry.FullName, String.Empty)
+            else
+                use zipStream = zipEntry.Open()
+                use memStream = new MemoryStream()
+                zipStream.CopyTo(memStream)
+                (zipEntry.FullName, CryptoUtility.sha256(memStream.ToArray()))
         )
 
     let saveApplicationMetadata(workingDirectory: String, releaseFile: String, files: (String * String) seq) =

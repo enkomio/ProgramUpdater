@@ -63,6 +63,7 @@ type Installer(destinationDirectory: String, logProvider: ILogProvider) as this 
         // check integrity
         let mutable integrityFailedOnFile = String.Empty        
         files
+        |> Array.filter(fun (hashValue, _) -> not(String.IsNullOrWhiteSpace(hashValue)))
         |> Array.forall(fun (hashValue, filePath) ->
             // try to read the file content via hash or file name (in case of installer)
             let fullFileName =
