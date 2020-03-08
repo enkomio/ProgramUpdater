@@ -90,19 +90,20 @@ type UpdateManager(workingDirectory: String) =
         |> Seq.sortByDescending(fun application -> application.Version)
         |> Seq.tryHead
 
-    abstract GetUpdates: Version -> (File * Byte array) list
+    abstract GetUpdates: Version -> (Application * (File * Byte array) list) option
     default this.GetUpdates(version: Version) =
         match this.GetLatestVersion() with
         | Some application when application.Version > version ->
             // compute the new hashes to be added
             let updateHashes = computeUpdate(version, application)
-            getFiles(updateHashes)
-        | _ -> List.empty
+            Some (application, getFiles(updateHashes))
+        | _ -> None
 
-    abstract ComputeIntegrityInfo: File list -> String
-    default this.ComputeIntegrityInfo(files: File list) =
+    abstract ComputeIntegrityInfo: File array -> String
+    default this.ComputeIntegrityInfo(files: File array) =
         let fileContent = new StringBuilder()        
-        files |> List.iter(fun file ->
+        files 
+        |> Array.iter(fun file ->
             fileContent.AppendFormat("{0},{1}", file.ContentHash, file.Path).AppendLine() |> ignore
         )
         fileContent.ToString()

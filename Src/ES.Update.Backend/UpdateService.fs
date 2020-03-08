@@ -84,23 +84,25 @@ type UpdateService(workspaceDirectory: String, privateKey: Byte array, logProvid
         lock _lock (fun _ ->
             if not(File.Exists(zipFile)) then
                 // compute updates
-                let updateFiles = updateManager.GetUpdates(version)
-                let integrityInfo = updateManager.ComputeIntegrityInfo(updateFiles |> List.map(fst))
-                
-                // create the zip file and store it in the appropriate directory            
-                Directory.CreateDirectory(storageDirectory) |> ignore            
-                createZipFile(zipFile, updateFiles, integrityInfo)
-                _logger?CreateZipFile(zipFile)
+                updateManager.GetUpdates(version)
+                |> Option.iter(fun (application, updateFiles) ->
+                    let fileCatalog = updateManager.ComputeIntegrityInfo(application.Files)
+                    
+                    // create the zip file and store it in the appropriate directory            
+                    Directory.CreateDirectory(storageDirectory) |> ignore            
+                    createZipFile(zipFile, updateFiles, fileCatalog)
+                    _logger?CreateZipFile(zipFile)
 
-                // add signature to zip file
-                addSignature(zipFile, privateKey)
+                    // add signature to zip file
+                    addSignature(zipFile, privateKey)
 
-                // add installer if necessary
-                if Directory.Exists(installerPath) then 
-                    _logger?Installer(installerPath)
-                    addInstaller(zipFile, installerPath, privateKey)
-                else
-                    _logger?NoInstaller()
+                    // add installer if necessary
+                    if Directory.Exists(installerPath) then 
+                        _logger?Installer(installerPath)
+                        addInstaller(zipFile, installerPath, privateKey)
+                    else
+                        _logger?NoInstaller()
+                )                
             else
                 _logger?ZipFileAlreadyPresent(zipFile)
         )            

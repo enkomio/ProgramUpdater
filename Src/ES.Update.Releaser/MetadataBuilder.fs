@@ -54,7 +54,7 @@ type MetadataBuilder(workingDirectory: String, patternsToExclude: List<String>, 
         )
         |> Array.map(fun zipEntry ->            
             // check if it is a directory
-            if String.IsNullOrEmpty(zipEntry.Name) && (zipEntry.FullName.EndsWith('/') || zipEntry.FullName.EndsWith('\\')) then
+            if String.IsNullOrEmpty(zipEntry.Name) && (zipEntry.FullName.EndsWith("/") || zipEntry.FullName.EndsWith("\\")) then
                 (zipEntry.FullName, String.Empty)
             else
                 use zipStream = zipEntry.Open()
