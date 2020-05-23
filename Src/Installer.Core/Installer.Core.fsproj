@@ -10,10 +10,9 @@
   </PropertyGroup>
   <ItemGroup>
     <None Include="paket.references" />
+    <Compile Include="..\Installer\Utility.fs" Link="Utility.fs" />
+    <Compile Include="..\Installer\Installer.fs" Link="Installer.fs" />
     <Compile Include="..\Installer\Program.fs" Link="Program.fs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\ES.Update.Core\ES.Update.Core.fsproj" />
   </ItemGroup>
   <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>
