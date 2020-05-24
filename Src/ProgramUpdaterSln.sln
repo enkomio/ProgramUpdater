@@ -54,7 +54,7 @@ Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Installer.Core", "Installer
 EndProject
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "ES.Update.Core", "ES.Update.Core\ES.Update.Core.fsproj", "{6567FB01-A3FE-47C6-8857-9F0633B0F3D9}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "ES.Update.Releaser.Core", "ES.Update.Releaser.Core\ES.Update.Releaser.Core.fsproj", "{48312776-DD3A-4C76-A1B5-2842DC4974FC}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "ES.Update.Releaser.Core", "ES.Update.Releaser.Core\ES.Update.Releaser.Core.fsproj", "{48312776-DD3A-4C76-A1B5-2842DC4974FC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

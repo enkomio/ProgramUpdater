@@ -22,7 +22,8 @@ type Installer(destinationDirectory: String, logProvider: ILogProvider) as this 
         |> info "NoInstaller" "No installer found in directory '{0}'. Copy files to '{1}'"
         |> verbose "CopyFile" "Copy '{0}' to '{1}'"
         |> verbose "MoveFile" "Move existing file '{0}' to '{1}'"
-        |> verbose "SkipFile" "Skiped file: {0}"
+        |> verbose "SkipFile" "Skip file due to forbidden pattern: {0}"
+        |> verbose "SkipFileSameHash" "Skip file becasue same hash: {0}"
         |> verbose "InstallerNotFound" "Installer {0} not found"
         |> critical "InstallerIntegrityFail" "The integrity check of the installer failed"
         |> buildAndAdd logProvider
@@ -39,13 +40,17 @@ type Installer(destinationDirectory: String, logProvider: ILogProvider) as this 
             _logger?MoveFile(destinationFile, copyFile)
             File.Move(destinationFile, copyFile)        
 
-    let copyFile(filePath: String, content: Byte array) =
+    let copyFile(filePath: String, contantHashValue: String, content: Byte array) =
         let destinationFile = Path.Combine(destinationDirectory, filePath)
         Directory.CreateDirectory(Path.GetDirectoryName(destinationFile)) |> ignore
         if File.Exists(destinationFile) then
-            moveFile(destinationFile)
-        _logger?CopyFile(filePath, destinationFile)
-        File.WriteAllBytes(destinationFile, content)
+            // check if same hash, if so, skip the file move
+            if not <| sha256(File.ReadAllBytes(destinationFile)).Equals(contantHashValue) then
+                moveFile(destinationFile)
+                _logger?CopyFile(filePath, destinationFile)
+        else
+            File.WriteAllBytes(destinationFile, content)
+            _logger?CopyFile(filePath, destinationFile)
 
     let getFiles(fileList: String) =
         fileList.Split([|'\r'; '\n'|], StringSplitOptions.RemoveEmptyEntries)
@@ -97,23 +102,26 @@ type Installer(destinationDirectory: String, logProvider: ILogProvider) as this 
 
         destinationDirectory
 
-    let isOkToCopy(patternsSkipOnExist: List<String>) (_: String, filePath: String) =
+    let isOkToCopy(patternsSkipOnExist: List<String>) (hashValueFile: String, filePath: String) =
         if File.Exists(filePath) && patternsSkipOnExist.Count > 0 then
-            // check if it matches the pattern, if so, skip it
+            // is forbidden pattern
             let skipFile =
-                patternsSkipOnExist
+                patternsSkipOnExist 
                 |> Seq.exists(fun pattern -> Regex.IsMatch(filePath, pattern))
+
             if skipFile then _logger?SkipFile(filePath)
-            not skipFile
+            not skipFile            
         else
             true
 
     let copyAllFiles(extractedDirectory: String, files: (String * String) array, patternsSkipOnExist: List<String>) =
-        files
+        files        
         |> Array.filter(isOkToCopy patternsSkipOnExist)
         |> Array.iter(fun (hashValue, filePath) ->
-            let content = File.ReadAllBytes(Path.Combine(extractedDirectory, hashValue))
-            copyFile(filePath, content)
+            let sourceFilePath = Path.Combine(extractedDirectory, hashValue)
+            if File.Exists(sourceFilePath) then
+                let content = File.ReadAllBytes(sourceFilePath)
+                copyFile(filePath, hashValue, content)
         )  
 
     let createInstallerMutex(argumentString: String) =

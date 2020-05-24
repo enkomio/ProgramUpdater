@@ -8,6 +8,7 @@
 #r @"System.IO.Compression.FileSystem"
 
 open System
+open System.Diagnostics
 open System.IO
 open Fake
 open Fake.Core.TargetOperators
@@ -148,6 +149,19 @@ Core.Target.create "CleanBuild" (fun _ ->
     |> Array.iter(File.Delete)
 )
 
+Core.Target.create "MergeInstaller" (fun _ ->
+    let ilMerge = Path.Combine("Src", "packages", "ilmerge", "tools", "net452", "ILMerge.exe")
+
+    [("Installer", "Installer.exe")]
+    |> List.iter(fun (projectName, mainExecutable) ->
+        let projectDir = Path.Combine(buildDir, projectName)
+        let mainExe = Path.Combine(projectDir, mainExecutable)
+        let allFiles = Directory.GetFiles(projectDir, "*.dll", SearchOption.AllDirectories) |> List.ofArray
+        let arguments = String.Join(" ", mainExe::allFiles)
+        Process.Start(ilMerge, arguments).WaitForExit()
+    )
+)
+
 Core.Target.create "Release" (fun _ ->
     let releaseDirectory = Path.Combine(releaseDir, String.Format("{0}.v{1}", projectFileName, releaseVersion))
     Directory.CreateDirectory(releaseDirectory) |> ignore
@@ -169,6 +183,7 @@ Core.Target.create "Release" (fun _ ->
     ==> "SetAssemblyInfo"
     ==> "Compile" 
     ==> "CleanBuild"
+    ==> "MergeInstaller"
     ==> "Release"
     
 // Start build

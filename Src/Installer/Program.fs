@@ -1,40 +1,12 @@
 ﻿namespace Installer
 
 open System
-open Argu
-open ES.Update
-open System.Diagnostics
 open System.Threading
 open System.Text
 open System.Text.RegularExpressions
-open ES.Fslog
 open System.IO
-open System.Reflection
-open ES.Fslog.Loggers
-open ES.Fslog.TextFormatters
 
 module Program =
-    type CLIArguments = 
-        | Source of path:String
-        | Dest of path:String
-        | No_Clean
-        | Verbose
-    with
-        interface IArgParserTemplate with
-            member s.Usage =
-                match s with
-                | Source _ -> "the source directory containing the updated files."
-                | Dest _ -> "the destination directory where the updated files must be copied."
-                | No_Clean -> "Don't remove temporary artefacts."
-                | Verbose -> "log verbose messages."
-
-    let private _logger =
-        log "Installer"
-        |> info "InstallationDone" "The installation is completed"
-        |> info "Wait" "Wait {0} second/s"
-        |> critical "ParentNotExited" "Parent process didn't completed successfully"
-        |> build
-
     let printColor(msg: String, color: ConsoleColor) =
         Console.ForegroundColor <- color
         Console.WriteLine(msg)
@@ -52,20 +24,11 @@ module Program =
         Console.WriteLine(copy)
         Console.ResetColor()
         
-    let printUsage(body: String) =
-        Console.WriteLine(body)
-
-    let private configureLogProvider(destinationDirectory: String, verbose: Boolean) =
-        let path = Path.Combine(destinationDirectory, "installer.log")
-        let logProvider = new LogProvider()  
-        let logLevel = if verbose then LogLevel.Verbose else LogLevel.Informational
-        logProvider.AddLogger(new ConsoleLogger(logLevel, new ConsoleLogFormatter()))
-        logProvider.AddLogger(new FileLogger(logLevel, path))
-        logProvider :> ILogProvider  
-
-    let runInstaller(sourceDirectory: String, destinationDirectory: String, dontClean: Boolean, logProvider: ILogProvider) =
-        let installer = new Installer(destinationDirectory, logProvider)
-        installer.RemoveTempFile <- not dontClean
+    let printUsage() =
+        Console.WriteLine("Usage: installer.exe <source dir> <destination dir>")
+        
+    let runInstaller(sourceDirectory: String, destinationDirectory: String) =
+        let installer = new Installer(destinationDirectory)        
         installer.CopyUpdates(sourceDirectory)
 
     let waitForParentCompletation() =
@@ -95,7 +58,6 @@ module Program =
 
     let wait() =
         let secondsToWait = 5
-        _logger?Wait(secondsToWait)
         for i=0 to secondsToWait-1 do            
             Thread.Sleep(TimeSpan.FromSeconds(1.0))
 
@@ -103,38 +65,22 @@ module Program =
     let main argv = 
         printBanner()
         
-        let parser = ArgumentParser.Create<CLIArguments>()
-        try            
-            let results = parser.Parse(argv)
-                    
-            if results.IsUsageRequested then
-                printUsage(parser.PrintUsage())
+        try                      
+            if argv.Length < 2 then
+                printUsage()
                 0
             else
-                let sourceDirectory = results.TryGetResult(<@ Source @>)
-                let destinationDirectory = results.TryGetResult(<@ Dest @>)
-                let dontClean = results.Contains(<@ No_Clean @>)
+                let sourceDirectory = argv.[0]
+                let destinationDirectory = argv.[1]
 
-                match (sourceDirectory, destinationDirectory) with
-                | (Some sourceDirectory, Some rawDestinationDirectory) ->
-                    let destinationDirectory = normalizeDestinationDirectory(rawDestinationDirectory)
-                    let logProvider = configureLogProvider(destinationDirectory, results.Contains(<@ Verbose @>))
-                    if waitForParentCompletation() then
-                        logProvider.AddLogSourceToLoggers(_logger)
-                        wait()
-                        runInstaller(sourceDirectory, destinationDirectory, dontClean, logProvider)
-                        _logger?InstallationDone()
-                        0
-                    else
-                        _logger?ParentNotExited("Parent process didn't completed successfully")
-                        1
-                | _ -> 
-                    printError("Source or Destination directory not specified")
+                let destinationDirectory = normalizeDestinationDirectory(destinationDirectory)                
+                if waitForParentCompletation() then
+                    wait()
+                    runInstaller(sourceDirectory, destinationDirectory)
+                    0
+                else
                     1
         with 
-            | :? ArguParseException ->
-                printUsage(parser.PrintUsage())   
-                1
             | e ->
                 printError(e.ToString())
                 1
