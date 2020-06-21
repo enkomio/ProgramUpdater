@@ -4,7 +4,7 @@ open System
 open System.IO.Compression
 open System.IO
 
-module internal Utility =
+module Utility =
     let tryReadEntry(zipArchive: ZipArchive, name: String) =
         let entry =
             zipArchive.Entries

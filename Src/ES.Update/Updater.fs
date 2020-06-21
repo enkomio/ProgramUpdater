@@ -7,11 +7,12 @@ open System.IO
 open System.IO.Compression
 open System.Text
 open ES.Fslog
-open ES.Fslog.Loggers
 
 type Updater(serverUri: Uri, projectName: String, currentVersion: Version, destinationDirectory: String, publicKey: Byte array, logProvider: ILogProvider) =
+    let _downloadingFileEvent = new Event<String>()
+    let _downloadedFileEvent = new Event<String>()
     let mutable _additionalData: Dictionary<String, String> option = None
-    
+
     let _logger =
         log "Updater"
         |> critical "CatalogIntegrityFail" "The integrity check of the catalog failed"
@@ -19,10 +20,10 @@ type Updater(serverUri: Uri, projectName: String, currentVersion: Version, desti
         |> info "DownloadDone" "Updates downloaded to file: {0}"
         |> buildAndAdd logProvider
 
-    let downloadUpdates(resultFile: String) =
+    let getContent(url: String) =
         try
             // configure request
-            let webRequest = WebRequest.Create(new Uri(serverUri, "updates")) :?> HttpWebRequest
+            let webRequest = WebRequest.Create(new Uri(serverUri, url)) :?> HttpWebRequest
             webRequest.Method <- "POST"
             webRequest.Timeout <- 5 * 60 * 1000
             webRequest.ContentType <- "application/x-www-form-urlencoded"
@@ -47,19 +48,71 @@ type Updater(serverUri: Uri, projectName: String, currentVersion: Version, desti
             // send the request and save the response to file
             use webResponse = webRequest.GetResponse() :?> HttpWebResponse            
             use responseStream = webResponse.GetResponseStream()            
-            use fileHandle = File.OpenWrite(resultFile)
-            responseStream.CopyTo(fileHandle)
-            true
+            use memoryStream = new MemoryStream()
+            responseStream.CopyTo(memoryStream)
+            memoryStream.ToArray()
         with e ->
             _logger?DownloadError(e.Message)
+            Array.empty<Byte>
+
+    let getString(url: String) =
+        Encoding.UTF8.GetString(getContent(url))
+
+    let parseCatalog(catalog: String) =
+        catalog.Split("\r\n")
+        |> Array.filter(fun line -> String.IsNullOrWhiteSpace(line) |> not)
+        |> Array.map(fun line -> 
+            // hash, file path
+            let items = line.Split(",")   
+            (items.[0], items.[1])
+        )
+
+    let tryGetCatalog() =
+        let catalog = getString("updates")
+        let items = catalog.Split("\r\n")
+        if items.Length >= 2 then
+            let signature = items.[0].Trim()
+            let catalog = String.Join("\r\n", items.[1..])
+            if CryptoUtility.verifyString(catalog, signature, publicKey) then
+                (String.Empty, Some(parseCatalog(catalog)))
+            else
+                ("Wrong catalog signature", None)
+        else
+            ("Wrong catalog format", None)
+
+    let isFileAlreadyDownloaded(hash: String, filePath: String) = 
+        if File.Exists(filePath) then
+            let receivedHash = CryptoUtility.sha256(File.ReadAllBytes(filePath))
+            receivedHash.Equals(hash, StringComparison.OrdinalIgnoreCase)
+        else
             false
 
+    let downloadFile(hash: String, filePath: String) =
+        // check if the file was already downloaded
+        let storagePath = Path.Combine(destinationDirectory, filePath)
+        if isFileAlreadyDownloaded(hash, storagePath) then
+            new Result(true)
+        else
+            _downloadingFileEvent.Trigger(hash)
+            let fileContent = getContent(String.Format("file/{0}", hash))
+            if fileContent |> Array.isEmpty then
+                new Result(false, Error = String.Format("Error downloading file: {0}", filePath))
+            else
+                let receivedHash = CryptoUtility.sha256(fileContent)
+                if receivedHash.Equals(hash, StringComparison.OrdinalIgnoreCase) then
+                    Directory.CreateDirectory(Path.GetDirectoryName(storagePath)) |> ignore
+                    File.WriteAllBytes(storagePath, fileContent)
+                    _downloadedFileEvent.Trigger(hash)
+                    new Result(true)
+                else
+                    new Result(false, Error = String.Format("Downloaded file '{0}' has a wrong hash", filePath))
+
     let verifyCatalogContentIntegrity(catalog: Byte array, installerCatalog: (Byte array) option, signature: Byte array, installerSignature: (Byte array) option) =
-        let catalogOk = CryptoUtility.verifySignature(catalog, signature, publicKey)
+        let catalogOk = CryptoUtility.verifyData(catalog, signature, publicKey)
         let installerCatalogOk = 
             match (installerCatalog, installerSignature) with
             | (Some installerCatalog, Some installerSignature) ->
-                CryptoUtility.verifySignature(installerCatalog, installerSignature, publicKey)
+                CryptoUtility.verifyData(installerCatalog, installerSignature, publicKey)
             | (Some _, None) -> false
             | (None, Some _) -> false
             | _ -> true
@@ -72,11 +125,22 @@ type Updater(serverUri: Uri, projectName: String, currentVersion: Version, desti
         let installerSignature = Utility.tryReadEntry(zipArchive, "installer-signature")
         verifyCatalogContentIntegrity(catalog, installerCatalog, signature, installerSignature)  
 
+    let downloadFiles(files: (String * String) array) =
+        files
+        |> Array.map(downloadFile)
+        |> Array.tryFind(fun res -> not res.Success)
+
     new (serverUri: Uri, projectName: String, currentVersion: Version, destinationDirectory: String, publicKey: Byte array) = new Updater(serverUri, projectName, currentVersion, destinationDirectory, publicKey, LogProvider.GetDefault())
 
     member val PatternsSkipOnExist = new List<String>() with get, set
     member val SkipIntegrityCheck = false with get, set
     member val RemoveTempFile = true with get, set
+
+    [<CLIEvent>]
+    member val DownloadingFile = _downloadingFileEvent.Publish
+
+    [<CLIEvent>]
+    member val DownloadedFile = _downloadedFileEvent.Publish
 
     member this.AddParameter(name: String, value: String) =
         let dataStorage =
@@ -145,21 +209,16 @@ type Updater(serverUri: Uri, projectName: String, currentVersion: Version, desti
         let latestVersionUri = new Uri(serverUri, String.Format("latest?project={0}", projectName))
         webClient.DownloadString(latestVersionUri) |> Version.Parse
         
-    member this.Update(version: Version) =
+    member this.Update() =
         // prepare update file
         let resultDirectory = Path.Combine(Path.GetTempPath(), projectName)
         Directory.CreateDirectory(resultDirectory) |> ignore
-        let resultFile = Path.Combine(resultDirectory, String.Format("update-{0}.zip", version))
-        if File.Exists(resultFile) && this.RemoveTempFile then File.Delete(resultFile)
-
-        // generate keys, download updates and install them
-        if downloadUpdates(resultFile) then
-            _logger?DownloadDone(resultFile)
-            let result = 
-                match this.InstallUpdates(resultFile) with
-                | Ok _ -> new Result(true)
-                | Error msg -> new Result(false, Error = msg)
-            if this.RemoveTempFile then File.Delete(resultFile)
-            result
-        else
-            new Result(false, Error = "Unable to download updates")
+        
+        // download catalog
+        match tryGetCatalog() with
+        | (_, Some files) -> 
+            match downloadFiles(files) with
+            | Some error -> error
+            | None -> new Result(true)
+        | (error, _) ->
+            new Result(false, Error = error)

@@ -9,6 +9,8 @@ open Org.BouncyCastle.Asn1.X9
 open Org.BouncyCastle.Security
 open Org.BouncyCastle.Pkcs
 open Org.BouncyCastle.X509
+open System.Net.NetworkInformation
+open System.Text
 
 [<AutoOpen>]
 module CryptoUtility =
@@ -38,12 +40,25 @@ module CryptoUtility =
         signer.BlockUpdate(data, 0, data.Length)
         signer.GenerateSignature()
 
-    let verifySignature(data: Byte array, signature: Byte array, publicKey: Byte array) =
+    let hexSign(data: Byte array, privateKey: Byte array) =
+        BitConverter.ToString(sign(data, privateKey)).Replace("-","")
+
+    let verifyData(data: Byte array, signature: Byte array, publicKey: Byte array) =
         let bpubKey = PublicKeyFactory.CreateKey(publicKey) :?> ECPublicKeyParameters
         let signer  = SignerUtilities.GetSigner("SHA256withECDSA")
         signer.Init (false, bpubKey)        
         signer.BlockUpdate (data, 0, data.Length)
         signer.VerifySignature(signature)
+
+    let verifyString(data: String, signature: String, publicKey: Byte array) =
+        let byteSignature = [|
+            for i in 0..2..(signature.Length-1) do
+                let s = String.Format("{0}{1}", signature.[i], signature.[i+1])
+                yield Convert.ToByte(s, 16)
+        |]
+
+        let byteData = Encoding.UTF8.GetBytes(data)
+        verifyData(byteData, byteSignature, publicKey)
 
     let sha256Raw(content: Byte array) =        
         use sha = new SHA256Managed()
@@ -68,3 +83,53 @@ module CryptoUtility =
         sw.Write(data, 0, data.Length)
         sw.Close()
         ms.ToArray()
+
+    let getMacAddresses() =
+        NetworkInterface.GetAllNetworkInterfaces()
+        |> Array.filter(fun ni -> 
+            (ni.NetworkInterfaceType = NetworkInterfaceType.Wireless80211
+            || ni.NetworkInterfaceType = NetworkInterfaceType.Ethernet)
+            && ni.OperationalStatus = OperationalStatus.Up
+        )
+        |> Array.collect(fun ni -> ni.GetPhysicalAddress().GetAddressBytes())
+
+    let getHardDiskSerials() =
+        let bytes =
+            DriveInfo.GetDrives()
+            |> Array.filter(fun drive -> drive.IsReady)
+            |> Array.collect(fun drive -> drive.RootDirectory.CreationTime.ToBinary() |> BitConverter.GetBytes)        
+            |> sha256Raw
+        Array.sub bytes 0 16 
+        
+    let encryptKey(data: Byte array) =
+        let key = getMacAddresses() |> sha256Raw
+        let iv = getHardDiskSerials()
+        encrypt(data, key, iv)
+
+    let private decryptKey(data: Byte array) =
+        let key = getMacAddresses() |> sha256Raw
+        let iv = getHardDiskSerials()
+        decrypt(data, key, iv)
+
+    let readPrivateKey(filename: String) =
+        let encodedKey = Convert.FromBase64String(File.ReadAllText(filename))
+        let effectiveKey = decryptKey(encodedKey)
+        Convert.ToBase64String(effectiveKey)
+
+    let encryptExportedKey(password: String, base64KeyData: String) =
+        let keyDataBytes = Convert.FromBase64String(base64KeyData)
+        let passwordBytes = Encoding.UTF8.GetBytes(password) |> sha256Raw
+        let iv = Array.zeroCreate<Byte>(16)
+        use provider = new RNGCryptoServiceProvider()        
+        provider.GetBytes(iv)
+        let encryptedKey = encrypt(keyDataBytes, passwordBytes, iv)
+        let encryptedData = Array.concat [iv; encryptedKey]
+        Convert.ToBase64String(encryptedData)
+
+    let decryptImportedKey(password: String, base64KeyData: String) =
+        let keyDataBytes = Convert.FromBase64String(base64KeyData)
+        let passwordBytes = Encoding.UTF8.GetBytes(password) |> sha256Raw
+        let iv = Array.sub keyDataBytes 0 16 
+        let encryptedKey = keyDataBytes.[16..]
+        let decryptedKey = decrypt(encryptedKey, passwordBytes, iv)
+        Convert.ToBase64String(decryptedKey)
