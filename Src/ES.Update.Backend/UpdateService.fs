@@ -4,33 +4,16 @@ open System
 open System.Timers
 open System.IO
 open System.Collections.Concurrent
-open Suave.Logging
-open ES.Fslog
+open ES.Update
+open System.Text
 
-type UpdateService(workspaceDirectory: String, privateKey: Byte array, logProvider: ILogProvider) =
+type UpdateService(workspaceDirectory: String, privateKey: Byte array) =
     let _lock = new Object() 
     let _timer = new Timer()
     let _updateManagers = new ConcurrentDictionary<String, UpdateManager>()
 
-    let _logger =
-        log "UpdateService"
-        |> info "NoInstaller" "No installer path defined, use a standard copy"
-        |> info "Installer" "Use installer from path: {0}"
-        |> info "CreateZipFile" "Created zip file: {0}"
-        |> info "ZipFileAlreadyPresent" "Zip file already present, use file from: {0}"
-        |> buildAndAdd logProvider
-
     let getUpdateManager(projectName: String) =
         _updateManagers.[projectName]
-        
-    let getUpdateFileName(inputVersion: Version, updateManager: UpdateManager) =
-        let correctInputVersion =
-            match updateManager.GetApplication(inputVersion) with
-            | Some application-> application.Version.ToString()
-            | None -> Entities.DefaultVersion
-
-        let latestVersion = updateManager.GetLatestVersion().Value.Version.ToString()
-        String.Format("{0}-{1}.zip", correctInputVersion, latestVersion)
 
     let doUpdate() =
         _timer.Stop()
@@ -49,16 +32,6 @@ type UpdateService(workspaceDirectory: String, privateKey: Byte array, logProvid
         _timer.Interval <- TimeSpan.FromMinutes(1.).TotalMilliseconds |> float
         _timer.Elapsed.Add(fun _ -> doUpdate())
         doUpdate()
-        
-    member this.GetAvailableVersions() =
-        lock _lock (fun _ ->
-            _updateManagers 
-            |> Seq.toArray
-            |> Array.collect(fun kv ->
-                kv.Value.GetAvailableVersions() 
-                |> Array.map(fun version -> (kv.Key, version))
-            )
-        )
 
     member this.GetLatestVersion(projectName: String) =
         lock _lock (fun _ ->
@@ -73,38 +46,31 @@ type UpdateService(workspaceDirectory: String, privateKey: Byte array, logProvid
     member this.IsValidProject(projectName: String) =
         _updateManagers.ContainsKey(projectName)
 
-    member this.GetUpdates(version: Version, projectName: String, installerPath: String) =
+    member this.GetCatalog(version: Version, projectName: String) =
         let updateManager = getUpdateManager(projectName)
-            
-        // compute zip filename
-        let storageDirectory = Path.Combine(workspaceDirectory, projectName, "Binaries")
-        let zipFile = Path.Combine(storageDirectory, getUpdateFileName(version, updateManager))
+        match updateManager.GetLatestVersion() with
+        | Some application when application.Version > version ->
+            let catalog = updateManager.ComputeCatalog(application.Files)
+            let signature = CryptoUtility.hexSign(Encoding.UTF8.GetBytes(catalog), privateKey)
+            let result = String.Format("{0}\r\n{1}", signature, catalog)
+            result
+        | _ -> String.Empty       
 
-        // check if we already compute this update, if not create it
+    member this.GetAvailableVersions() =
         lock _lock (fun _ ->
-            if not(File.Exists(zipFile)) then
-                // compute updates
-                updateManager.GetUpdates(version)
-                |> Option.iter(fun (application, updateFiles) ->
-                    let fileCatalog = updateManager.ComputeIntegrityInfo(application.Files)
-                    
-                    // create the zip file and store it in the appropriate directory            
-                    Directory.CreateDirectory(storageDirectory) |> ignore            
-                    createZipFile(zipFile, updateFiles, fileCatalog)
-                    _logger?CreateZipFile(zipFile)
+            _updateManagers 
+            |> Seq.toArray
+            |> Array.collect(fun kv ->
+                kv.Value.GetAvailableVersions() 
+                |> Array.map(fun version -> (kv.Key, version))
+            )
+        )
 
-                    // add signature to zip file
-                    addSignature(zipFile, privateKey)
-
-                    // add installer if necessary
-                    if Directory.Exists(installerPath) then 
-                        _logger?Installer(installerPath)
-                        addInstaller(zipFile, installerPath, privateKey)
-                    else
-                        _logger?NoInstaller()
-                )                
-            else
-                _logger?ZipFileAlreadyPresent(zipFile)
-        )            
-
-        zipFile
+    member this.GetFilePath(hash: String) =
+        let fileBucketDirectory = Path.Combine(workspaceDirectory, "FileBucket")        
+        let fileToSearch = Path.GetFullPath(Path.Combine(fileBucketDirectory, hash))
+        let allFiles = Directory.GetFiles(fileBucketDirectory, "*", SearchOption.AllDirectories)
+        if allFiles |> Array.contains fileToSearch then
+            Some fileToSearch
+        else
+            None

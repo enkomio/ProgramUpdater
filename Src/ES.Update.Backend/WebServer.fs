@@ -1,8 +1,6 @@
 ﻿namespace ES.Update.Backend
 
 open System
-open System.IO
-open System.Collections.Generic
 open System.Net
 open System.Threading
 open Suave
@@ -16,8 +14,17 @@ open ES.Fslog
 
 type WebServer(binding: Uri, workspaceDirectory: String, privateKey: Byte array, logProvider: ILogProvider) as this =
     let _shutdownToken = new CancellationTokenSource()
-    let _updateService = new UpdateService(workspaceDirectory, privateKey, logProvider)
+    let _updateService = new UpdateService(workspaceDirectory, privateKey)
     let _logger = new WebServerLogger()
+
+    let getFileFullPath(fileName: String) (ctx: HttpContext) = async {
+        match _updateService.GetFilePath(fileName) with
+        | Some filePath -> 
+            let newState = ctx.userState.Add("file", filePath).Add("name", fileName)
+            return Some {ctx with userState = newState}
+        | None ->
+            return None
+    }
         
     let preFilter (oldCtx: HttpContext) = async {   
         let! ctx = addHeader "X-Xss-Protection" "1; mode=block" oldCtx
@@ -53,15 +60,19 @@ type WebServer(binding: Uri, workspaceDirectory: String, privateKey: Byte array,
                 && _updateService.IsValidProject(values.["project"]) 
             ->
             
-            let signedZip = _updateService.GetUpdates(!inputVersion, values.["project"], this.InstallerPath)
-
-            // send the update zip file
-            addHeader "Content-Type" "application/octet-stream"
-            >=> addHeader "Content-Disposition" ("inline; filename=\"update.zip\"")
-            >=> sendFile signedZip false
-            <| ctx
+            let projectName = values.["project"]
+            let catalog = _updateService.GetCatalog(!inputVersion, projectName)
+            OK catalog ctx
         | _ -> 
             BAD_REQUEST "Missing parameters" ctx
+
+    let downloadFile(ctx: HttpContext) =
+        let file = ctx.userState.["file"] :?> String
+        let name = ctx.userState.["name"] :?> String
+        addHeader "Content-Type" "application/octet-stream"
+        >=> addHeader "Content-Disposition" ("inline; filename=\"" + name + ".zip\"")
+        >=> sendFile file true
+        <| ctx
 
     let authorize (webPart: WebPart) (ctx: HttpContext) =
         if this.Authenticate(ctx)
@@ -87,11 +98,15 @@ type WebServer(binding: Uri, workspaceDirectory: String, privateKey: Byte array,
     default this.GetRoutes() = [
         GET >=> preFilter >=> choose [ 
             path (this.PathPrefix + "/") >=> index          
-            path (this.PathPrefix+ "/latest") >=> latest
+            path (this.PathPrefix + "/latest") >=> latest            
         ] >=> postFilter
 
         POST >=> preFilter >=> choose [ 
+            // get the catalog for the specified version
             path (this.PathPrefix + "/updates") >=> authorize updates
+
+            // get the specified file
+            pathScan (PrintfFormat<_, _, _, _, String>(this.PathPrefix + "/file/%s")) getFileFullPath >=> authorize downloadFile
         ] >=> postFilter
     ]
 

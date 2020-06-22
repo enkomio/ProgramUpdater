@@ -39,43 +39,8 @@ type UpdateManager(workingDirectory: String) =
             _timer.Interval <- TimeSpan.FromMinutes(1.).TotalMilliseconds |> float
             _timer.Elapsed.Add(fun _ -> populateKnowledgeBase())
 
-    let getApplicationHashes(application: Application) =
-        application.Files |> Array.map(fun file -> file.ContentHash)
-
-    let getVersionHashes(version: Version) =
-        match _applications |> Seq.tryFind(fun app -> app.Version = version) with
-        | Some application -> getApplicationHashes(application)
-        | None -> Array.empty
-
-    let computeUpdate(oldVersion: Version, latestApplication: Application) =
-        let oldHashes = getVersionHashes(oldVersion) |> Set.ofArray
-        let newHashes = getApplicationHashes(latestApplication) |> Set.ofArray
-        Set.difference newHashes oldHashes
-
-    let mapHashToFile(hashes: String seq) = [
-        let allFiles = _applications |> Seq.collect(fun app -> app.Files)
-        for hash in hashes do
-            yield (allFiles |> Seq.find(fun file -> file.ContentHash = hash))
-    ]
-
-    let getFiles(hashes: String seq) =
-        let fileBucketDirectory = Path.Combine(workingDirectory, "FileBucket")        
-        let allFiles = Directory.GetFiles(fileBucketDirectory, "*", SearchOption.AllDirectories)
-        let updateFiles = mapHashToFile(hashes)
-        
-        // calculate the files to add
-        updateFiles 
-        |> List.map(fun file ->
-            let version =
-                allFiles 
-                |> Array.find(fun f -> Path.GetFileNameWithoutExtension(f).Equals(file.ContentHash, StringComparison.OrdinalIgnoreCase))
-                |> Path.GetDirectoryName
-                |> Path.GetFileName
-            let fileName = Path.Combine(fileBucketDirectory, version, file.ContentHash)
-            (file, File.ReadAllBytes(fileName))
-        )
-
-    member this.GetAvailableVersions() =
+    abstract GetAvailableVersions: unit -> Version array
+    default this.GetAvailableVersions() =
         _applications 
         |> Seq.toArray
         |> Array.map(fun application -> application.Version)
@@ -90,20 +55,11 @@ type UpdateManager(workingDirectory: String) =
         |> Seq.sortByDescending(fun application -> application.Version)
         |> Seq.tryHead
 
-    abstract GetUpdates: Version -> (Application * (File * Byte array) list) option
-    default this.GetUpdates(version: Version) =
-        match this.GetLatestVersion() with
-        | Some application when application.Version > version ->
-            // compute the new hashes to be added
-            let updateHashes = computeUpdate(version, application)
-            Some (application, getFiles(updateHashes))
-        | _ -> None
-
-    abstract ComputeIntegrityInfo: File array -> String
-    default this.ComputeIntegrityInfo(files: File array) =
+    abstract ComputeCatalog: File array -> String
+    default this.ComputeCatalog(files: File array) =
         let fileContent = new StringBuilder()        
         files 
         |> Array.iter(fun file ->
-            fileContent.AppendFormat("{0},{1}", file.ContentHash, file.Path).AppendLine() |> ignore
+            fileContent.AppendFormat("{0},{1}\r\n", file.ContentHash, file.Path) |> ignore
         )
         fileContent.ToString()
