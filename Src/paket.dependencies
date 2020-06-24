@@ -1,7 +1,6 @@
 version 5.206.0
 source https://nuget.org/api/v2
 
-nuget FSharpLog
 nuget FSharp.Core
 nuget Suave
 nuget Newtonsoft.Json
