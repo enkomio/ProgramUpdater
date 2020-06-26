@@ -20,6 +20,8 @@ type MetadataBuilder(workingDirectory: String, patternsToExclude: List<String>, 
         |> info "SkipZipEntry" "Skipped entry '{0}' due to forbidden pattern"
         |> buildAndAdd logProvider
 
+    let fileBucketDirectory = Path.Combine(workingDirectory, "FileBucket")
+
     let extractProjectName(releaseFile: String) =        
         let m = Regex.Match(releaseFile |> Path.GetFileName, "(.+?)[0-9]+(\.[0-9]+)+")
         m.Groups.[1].Value.Trim('v').Trim('.')
@@ -85,9 +87,8 @@ type MetadataBuilder(workingDirectory: String, patternsToExclude: List<String>, 
         )
 
     let saveFilesContent(workingDirectory: String, releaseFile: String, files: (String * String) seq) =
-        let releaseVersion = extractVersion(releaseFile).ToString()
-        let fileBucketDir = Path.Combine(workingDirectory, "FileBucket", releaseVersion)
-        Directory.CreateDirectory(fileBucketDir) |> ignore
+        let releaseVersion = extractVersion(releaseFile).ToString()        
+        Directory.CreateDirectory(fileBucketDirectory) |> ignore
 
         // compute the new files that must be copied
         let allHashFiles = 
@@ -107,7 +108,7 @@ type MetadataBuilder(workingDirectory: String, patternsToExclude: List<String>, 
         files 
         |> Seq.filter(fun (_, hashValue) -> newHashFiles.Contains(hashValue) )
         |> Seq.iter(fun (name, hashValue) ->
-            let filename = Path.Combine(fileBucketDir, hashValue)
+            let filename = Path.Combine(fileBucketDirectory, hashValue)
             if not(File.Exists(filename)) then
                 _logger?SavingFile(name, hashValue)
                 File.WriteAllBytes(filename, readZipEntryContent(name, entries))
