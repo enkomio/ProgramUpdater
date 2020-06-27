@@ -5,17 +5,7 @@ open System.Reflection
 open System.Text
 open ES.Update
 
-module BackendTests =
-    let private encryptExportedKey(password: String, keyData: String) =
-        let utility = typeof<UpdateServer.Settings>.Assembly.ManifestModule.GetType("UpdateServer.Utility")
-        let m = utility.GetMethod("encryptExportedKey", BindingFlags.Static ||| BindingFlags.NonPublic)
-        m.Invoke(null, [|password; keyData|]) :?> String
-
-    let private decryptImportedKey(password: String, keyData: String) =
-        let utility = typeof<UpdateServer.Settings>.Assembly.ManifestModule.GetType("UpdateServer.Utility")
-        let m = utility.GetMethod("decryptImportedKey", BindingFlags.Static ||| BindingFlags.NonPublic)
-        m.Invoke(null, [|password; keyData|]) :?> String
-        
+module BackendTests =        
     let private ``Encrypt and Decrypt exported key``() =
         let password = "testPassword"
         let privateKey = 
@@ -32,6 +22,6 @@ module BackendTests =
         // verify
         let testResult = importedKey.Equals(privateKey, StringComparison.Ordinal)
         assert testResult
-        
+
     let runAll() =
         ``Encrypt and Decrypt exported key``()

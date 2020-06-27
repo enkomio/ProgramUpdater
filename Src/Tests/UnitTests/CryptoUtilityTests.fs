@@ -8,17 +8,6 @@ open System.Net.NetworkInformation
 open System.IO
 
 module CryptoUtilityTests =
-
-    let private getMacAddresses() =
-        let utility = typeof<UpdateServer.Settings>.Assembly.ManifestModule.GetType("UpdateServer.Utility")
-        let getMacAddressesMethod = utility.GetMethod("getMacAddresses", BindingFlags.Static ||| BindingFlags.NonPublic)
-        getMacAddressesMethod.Invoke(null, Array.empty) :?> Byte array
-
-    let private getHardDiskSerials() =
-        let utility = typeof<UpdateServer.Settings>.Assembly.ManifestModule.GetType("UpdateServer.Utility")
-        let getMacAddressesMethod = utility.GetMethod("getHardDiskSerials", BindingFlags.Static ||| BindingFlags.NonPublic)
-        getMacAddressesMethod.Invoke(null, Array.empty) :?> Byte array
-
     let private ``Sign data and verify``() =
         // generate signature
         let data = Encoding.UTF8.GetBytes("This buffer contains data that must be signed")
@@ -26,7 +15,7 @@ module CryptoUtilityTests =
         let signature = CryptoUtility.sign(data, privateKey)
         
         // verify signature
-        let testResult = CryptoUtility.verifySignature(data, signature, publicKey)
+        let testResult = CryptoUtility.verifyData(data, signature, publicKey)
         assert testResult
 
     let private ``Sign data and verify a corrupted data``() =
@@ -37,7 +26,7 @@ module CryptoUtilityTests =
         
         // verify signature
         data.[2] <- data.[2] ^^^ 0xA1uy
-        let testResult = CryptoUtility.verifySignature(data, signature, publicKey)
+        let testResult = CryptoUtility.verifyData(data, signature, publicKey)
         assert(not testResult)
 
     let private ``Sign data and verify a corrupted signature``() =
@@ -48,7 +37,7 @@ module CryptoUtilityTests =
         
         // verify signature
         signature.[2] <- signature.[2] ^^^ 0xA1uy
-        let testResult = CryptoUtility.verifySignature(data, signature, publicKey)
+        let testResult = CryptoUtility.verifyData(data, signature, publicKey)
         assert(not testResult)
 
     let private ``Encrypt and decrypt data``() =
