@@ -1,7 +1,0 @@
-﻿{
-  "WorkspaceDirectory": "updates",
-  "PatternToExclude": [
-    "\\.lic$",
-    "\\.log$"
-  ]
-}
