@@ -53,14 +53,6 @@
     <None Include="paket.references" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\ES.Update.Backend\ES.Update.Backend.fsproj">
-      <Project>{b311972c-ad50-41ca-afd3-ba67d227e86b}</Project>
-      <Name>ES.Update.Backend</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\ES.Update\ES.Update.fsproj">
-      <Project>{b68eadf0-b0db-46a6-949a-9133cabb067a}</Project>
-      <Name>ES.Update</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Example2\Example2.csproj">
       <Project>{6176038c-5a8c-4117-81cd-5a936b0679ea}</Project>
       <Name>Example2</Name>
