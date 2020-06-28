@@ -208,6 +208,11 @@ type Updater(serverUri: Uri, projectName: String, currentVersion: Version, desti
         use webClient = new WebClient()        
         let latestVersionUri = new Uri(serverUri, String.Format("latest?project={0}", projectName))
         webClient.DownloadString(latestVersionUri) |> Version.Parse
+
+    member this.GetNewFiles() =
+        match tryGetCatalog() with
+        | (_, Some files) ->  files |> Array.map(snd)
+        | _ -> Array.empty<String>
         
     member this.Update() =
         // prepare update file
