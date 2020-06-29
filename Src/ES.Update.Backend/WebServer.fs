@@ -40,7 +40,7 @@ type WebServer(binding: Uri, workspaceDirectory: String, privateKey: Byte array,
     }
 
     let index(ctx: HttpContext) =
-        OK "-=[ Enkomio Updater Server ]=-" ctx
+        OK this.IndexPage ctx
 
     let latest(ctx: HttpContext) =
         match ctx.request.queryParam "project"  with
@@ -87,6 +87,8 @@ type WebServer(binding: Uri, workspaceDirectory: String, privateKey: Byte array,
         }
 
     new (binding: Uri, workspaceDirectory: String, privateKey: Byte array) = new WebServer(binding, workspaceDirectory, privateKey, LogProvider.GetDefault())
+
+    member val IndexPage = "-=[ Enkomio Updater Server ]=-" with get, set
 
     /// This parameter can specify a uri path prefix to use when invoking endpoints
     member val PathPrefix = String.Empty with get, set
