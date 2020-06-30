@@ -8,7 +8,7 @@ open System.IO.Compression
 open System.Text
 open ES.Fslog
 
-type Updater(serverUri: Uri, projectName: String, currentVersion: Version, destinationDirectory: String, publicKey: Byte array, logProvider: ILogProvider) =
+type Updater(serverUri: Uri, projectName: String, currentVersion: Version, destinationDirectory: String, publicKey: Byte array, logProvider: ILogProvider) as this =
     let _downloadingFileEvent = new Event<String>()
     let _downloadedFileEvent = new Event<String>()
     let mutable _additionalData: Dictionary<String, String> option = None
@@ -72,8 +72,9 @@ type Updater(serverUri: Uri, projectName: String, currentVersion: Version, desti
         let items = catalog.Split("\r\n")
         if items.Length >= 2 then
             let signature = items.[0].Trim()
+            let catalogBuilder = new StringBuilder()
             let catalog = String.Join("\r\n", items.[1..])
-            if CryptoUtility.verifyString(catalog, signature, publicKey) then
+            if this.SkipIntegrityCheck || CryptoUtility.verifyString(catalog, signature, publicKey) then
                 (String.Empty, Some(parseCatalog(catalog)))
             else
                 ("Wrong catalog signature", None)
