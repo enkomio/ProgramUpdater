@@ -72,7 +72,6 @@ type Updater(serverUri: Uri, projectName: String, currentVersion: Version, desti
         let items = catalog.Split("\r\n")
         if items.Length >= 2 then
             let signature = items.[0].Trim()
-            let catalogBuilder = new StringBuilder()
             let catalog = String.Join("\r\n", items.[1..])
             if this.SkipIntegrityCheck || CryptoUtility.verifyString(catalog, signature, publicKey) then
                 (String.Empty, Some(parseCatalog(catalog)))
