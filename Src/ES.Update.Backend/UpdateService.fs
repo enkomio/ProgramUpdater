@@ -11,6 +11,7 @@ type UpdateService(workspaceDirectory: String, privateKey: Byte array) =
     let _lock = new Object() 
     let _timer = new Timer()
     let _updateManagers = new ConcurrentDictionary<String, UpdateManager>()
+    let mutable _allFiles = Array.empty<String>
 
     let getUpdateManager(projectName: String) =
         _updateManagers.[projectName]
@@ -18,6 +19,7 @@ type UpdateService(workspaceDirectory: String, privateKey: Byte array) =
     let doUpdate() =
         _timer.Stop()
         lock _lock (fun _ ->
+            // read all version
             Directory.GetDirectories(workspaceDirectory)
             |> Array.map(fun directory -> Path.GetFileName(directory))
             |> Array.iter(fun projectName -> 
@@ -25,6 +27,10 @@ type UpdateService(workspaceDirectory: String, privateKey: Byte array) =
                 Directory.CreateDirectory(projectDirectory) |> ignore
                 _updateManagers.[projectName] <- new UpdateManager(projectDirectory)
             )
+
+            // read all available files
+            let fileBucketDirectory = Path.Combine(workspaceDirectory, "FileBucket")
+            _allFiles <- Directory.GetFiles(fileBucketDirectory, "*", SearchOption.AllDirectories)
         )        
         _timer.Start()
 
@@ -69,8 +75,7 @@ type UpdateService(workspaceDirectory: String, privateKey: Byte array) =
     member this.GetFilePath(hash: String) =
         let fileBucketDirectory = Path.Combine(workspaceDirectory, "FileBucket")        
         let fileToSearch = Path.GetFullPath(Path.Combine(fileBucketDirectory, hash))
-        let allFiles = Directory.GetFiles(fileBucketDirectory, "*", SearchOption.AllDirectories)
-        if allFiles |> Array.contains fileToSearch then
+        if _allFiles |> Array.contains fileToSearch then
             Some fileToSearch
         else
             None
