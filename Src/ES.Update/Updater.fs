@@ -64,7 +64,7 @@ type Updater(serverUri: Uri, projectName: String, currentVersion: Version, desti
         |> Array.map(fun line -> 
             // hash, file path
             let items = line.Split(",")   
-            (items.[0], items.[1])
+            {Hash = items.[0]; FilePath = items.[1]}
         )
 
     let tryGetCatalog() =
@@ -87,25 +87,22 @@ type Updater(serverUri: Uri, projectName: String, currentVersion: Version, desti
         else
             false
 
-    let downloadFile(hash: String, filePath: String) =
-        // check if the file was already downloaded
-        let storagePath = Path.Combine(destinationDirectory, filePath)
-        if isFileAlreadyDownloaded(hash, storagePath) then
-            new Result(true)
+    let downloadFile(file: ApplicationFile) =
+        _downloadingFileEvent.Trigger(file.Hash)
+        let storagePath = Path.Combine(destinationDirectory, file.FilePath)        
+        let fileContent = getContent(String.Format("file/{0}", hash))
+
+        if fileContent |> Array.isEmpty then
+            new Result(false, Error = String.Format("Error downloading file: {0}", file.FilePath))
         else
-            _downloadingFileEvent.Trigger(hash)
-            let fileContent = getContent(String.Format("file/{0}", hash))
-            if fileContent |> Array.isEmpty then
-                new Result(false, Error = String.Format("Error downloading file: {0}", filePath))
+            let receivedHash = CryptoUtility.sha256(fileContent)
+            if receivedHash.Equals(file.Hash, StringComparison.OrdinalIgnoreCase) then
+                Directory.CreateDirectory(Path.GetDirectoryName(storagePath)) |> ignore
+                File.WriteAllBytes(storagePath, fileContent)
+                _downloadedFileEvent.Trigger(file.Hash)
+                new Result(true)
             else
-                let receivedHash = CryptoUtility.sha256(fileContent)
-                if receivedHash.Equals(hash, StringComparison.OrdinalIgnoreCase) then
-                    Directory.CreateDirectory(Path.GetDirectoryName(storagePath)) |> ignore
-                    File.WriteAllBytes(storagePath, fileContent)
-                    _downloadedFileEvent.Trigger(hash)
-                    new Result(true)
-                else
-                    new Result(false, Error = String.Format("Downloaded file '{0}' has a wrong hash", filePath))
+                new Result(false, Error = String.Format("Downloaded file '{0}' has a wrong hash", file.FilePath))
 
     let verifyCatalogContentIntegrity(catalog: Byte array, installerCatalog: (Byte array) option, signature: Byte array, installerSignature: (Byte array) option) =
         let catalogOk = CryptoUtility.verifyData(catalog, signature, publicKey)
@@ -125,7 +122,7 @@ type Updater(serverUri: Uri, projectName: String, currentVersion: Version, desti
         let installerSignature = Utility.tryReadEntry(zipArchive, "installer-signature")
         verifyCatalogContentIntegrity(catalog, installerCatalog, signature, installerSignature)  
 
-    let downloadFiles(files: (String * String) array) =
+    let downloadFiles(files: ApplicationFile array) =
         files
         |> Array.map(downloadFile)
         |> Array.tryFind(fun res -> not res.Success)
@@ -211,8 +208,15 @@ type Updater(serverUri: Uri, projectName: String, currentVersion: Version, desti
 
     member this.GetNewFiles() =
         match tryGetCatalog() with
-        | (_, Some files) ->  files |> Array.map(snd)
-        | _ -> Array.empty<String>
+        | (_, Some files) ->
+            let newFiles =
+                files
+                |> Array.filter(fun fi ->
+                    let storagePath = Path.Combine(destinationDirectory, fi.FilePath)
+                    isFileAlreadyDownloaded(fi.Hash, storagePath)
+                )
+            (String.Empty, Some newFiles)
+        | r -> r
         
     member this.Update() =
         // prepare update file
@@ -220,7 +224,7 @@ type Updater(serverUri: Uri, projectName: String, currentVersion: Version, desti
         Directory.CreateDirectory(resultDirectory) |> ignore
         
         // download catalog
-        match tryGetCatalog() with
+        match this.GetNewFiles() with
         | (_, Some files) -> 
             match downloadFiles(files) with
             | Some error -> error
