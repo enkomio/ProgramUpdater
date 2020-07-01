@@ -73,9 +73,5 @@ type UpdateService(workspaceDirectory: String, privateKey: Byte array) =
         )
 
     member this.GetFilePath(hash: String) =
-        let fileBucketDirectory = Path.Combine(workspaceDirectory, "FileBucket")        
-        let fileToSearch = Path.GetFullPath(Path.Combine(fileBucketDirectory, hash))
-        if _allFiles |> Array.contains fileToSearch then
-            Some fileToSearch
-        else
-            None
+        _allFiles
+        |> Array.tryFind(fun file -> file.EndsWith(hash, StringComparison.OrdinalIgnoreCase))
