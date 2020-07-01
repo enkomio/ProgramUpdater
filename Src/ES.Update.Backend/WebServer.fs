@@ -23,6 +23,7 @@ type WebServer(binding: Uri, workspaceDirectory: String, privateKey: Byte array,
             let newState = ctx.userState.Add("file", filePath).Add("name", fileName)
             return Some {ctx with userState = newState}
         | None ->
+            _logger.FileNotFound(fileName)
             return None
     }
         
@@ -88,6 +89,10 @@ type WebServer(binding: Uri, workspaceDirectory: String, privateKey: Byte array,
             listenTimeout = TimeSpan.FromMilliseconds (float 10000)
             cancellationToken = _shutdownToken.Token
         }
+
+    do
+        _logger.SettingInfo("Workspace Directory", workspaceDirectory)
+        _logger.SettingInfo("Binding Uri", binding.ToString())
 
     new (binding: Uri, workspaceDirectory: String, privateKey: Byte array) = new WebServer(binding, workspaceDirectory, privateKey, LogProvider.GetDefault())
 

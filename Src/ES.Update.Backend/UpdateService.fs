@@ -11,6 +11,7 @@ type UpdateService(workspaceDirectory: String, privateKey: Byte array) =
     let _lock = new Object() 
     let _timer = new Timer()
     let _updateManagers = new ConcurrentDictionary<String, UpdateManager>()
+    let _syncRoot = new Object()
     let mutable _allFiles = Array.empty<String>
 
     let getUpdateManager(projectName: String) =
@@ -30,7 +31,8 @@ type UpdateService(workspaceDirectory: String, privateKey: Byte array) =
 
             // read all available files
             let fileBucketDirectory = Path.Combine(workspaceDirectory, "FileBucket")
-            _allFiles <- Directory.GetFiles(fileBucketDirectory, "*", SearchOption.AllDirectories)
+            let allFiles = Directory.GetFiles(fileBucketDirectory, "*", SearchOption.AllDirectories)
+            lock _syncRoot (fun () -> _allFiles <- allFiles)
         )        
         _timer.Start()
 
@@ -73,5 +75,7 @@ type UpdateService(workspaceDirectory: String, privateKey: Byte array) =
         )
 
     member this.GetFilePath(hash: String) =
-        _allFiles
-        |> Array.tryFind(fun file -> file.EndsWith(hash, StringComparison.OrdinalIgnoreCase))
+        lock _syncRoot (fun () ->
+            _allFiles
+            |> Array.tryFind(fun file -> file.EndsWith(hash, StringComparison.OrdinalIgnoreCase))
+        )

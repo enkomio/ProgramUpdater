@@ -25,3 +25,11 @@ type WebServerLogger() =
     [<Log(2, Message = "Loaded project {0} version {1}", Level = LogLevel.Informational)>]
     member this.VersionInfo(projectName: String, version: Version) =         
         base.WriteLog(2, projectName, version)
+
+    [<Log(3, Message = "File not found: {0}", Level = LogLevel.Warning)>]
+    member this.FileNotFound(file: String) =         
+        base.WriteLog(3, file)
+
+    [<Log(4, Message = "Setting {0} = {1}", Level = LogLevel.Informational)>]
+    member this.SettingInfo(name: String, value: String) =         
+        base.WriteLog(4, name, value)
