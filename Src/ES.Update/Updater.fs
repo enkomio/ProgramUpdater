@@ -134,7 +134,7 @@ type Updater(serverUri: Uri, projectName: String, currentVersion: Version, desti
                 files
                 |> Array.filter(fun fi ->
                     let storagePath = Path.Combine(destinationDirectory, fi.FilePath)
-                    isFileAlreadyDownloaded(fi.Hash, storagePath)
+                    isFileAlreadyDownloaded(fi.Hash, storagePath) |> not
                 )
             (String.Empty, Some newFiles)
         | r -> r
