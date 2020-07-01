@@ -90,7 +90,7 @@ type Updater(serverUri: Uri, projectName: String, currentVersion: Version, desti
     let downloadFile(file: ApplicationFile) =
         _downloadingFileEvent.Trigger(file.Hash)
         let storagePath = Path.Combine(destinationDirectory, file.FilePath)        
-        let fileContent = getContent(String.Format("file/{0}", hash))
+        let fileContent = getContent(String.Format("file/{0}", file.Hash))
 
         if fileContent |> Array.isEmpty then
             new Result(false, Error = String.Format("Error downloading file: {0}", file.FilePath))
