@@ -70,7 +70,7 @@ type WebServer(binding: Uri, workspaceDirectory: String, privateKey: Byte array,
         let file = ctx.userState.["file"] :?> String
         let name = ctx.userState.["name"] :?> String
         addHeader "Content-Type" "application/octet-stream"
-        >=> addHeader "Content-Disposition" ("inline; filename=\"" + name + ".zip\"")
+        >=> addHeader "Content-Disposition" ("inline; filename=\"" + name + "\"")
         >=> sendFile file true
         <| ctx
 
