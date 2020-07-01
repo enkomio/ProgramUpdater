@@ -127,6 +127,18 @@ type Updater(serverUri: Uri, projectName: String, currentVersion: Version, desti
         |> Array.map(downloadFile)
         |> Array.tryFind(fun res -> not res.Success)
 
+    let getNewFiles() =
+        match tryGetCatalog() with
+        | (_, Some files) ->
+            let newFiles =
+                files
+                |> Array.filter(fun fi ->
+                    let storagePath = Path.Combine(destinationDirectory, fi.FilePath)
+                    isFileAlreadyDownloaded(fi.Hash, storagePath)
+                )
+            (String.Empty, Some newFiles)
+        | r -> r
+
     new (serverUri: Uri, projectName: String, currentVersion: Version, destinationDirectory: String, publicKey: Byte array) = new Updater(serverUri, projectName, currentVersion, destinationDirectory, publicKey, LogProvider.GetDefault())
 
     member val PatternsSkipOnExist = new List<String>() with get, set
@@ -207,16 +219,9 @@ type Updater(serverUri: Uri, projectName: String, currentVersion: Version, desti
         webClient.DownloadString(latestVersionUri) |> Version.Parse
 
     member this.GetNewFiles() =
-        match tryGetCatalog() with
-        | (_, Some files) ->
-            let newFiles =
-                files
-                |> Array.filter(fun fi ->
-                    let storagePath = Path.Combine(destinationDirectory, fi.FilePath)
-                    isFileAlreadyDownloaded(fi.Hash, storagePath)
-                )
-            (String.Empty, Some newFiles)
-        | r -> r
+        match getNewFiles() with
+        | (_, Some files) -> files
+        | (error, _) -> Array.empty<ApplicationFile>
         
     member this.Update() =
         // prepare update file
@@ -224,7 +229,7 @@ type Updater(serverUri: Uri, projectName: String, currentVersion: Version, desti
         Directory.CreateDirectory(resultDirectory) |> ignore
         
         // download catalog
-        match this.GetNewFiles() with
+        match getNewFiles() with
         | (_, Some files) -> 
             match downloadFiles(files) with
             | Some error -> error
