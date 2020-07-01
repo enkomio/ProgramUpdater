@@ -15,7 +15,10 @@ open ES.Fslog
 type WebServer(binding: Uri, workspaceDirectory: String, privateKey: Byte array, logProvider: ILogProvider) as this =
     let _shutdownToken = new CancellationTokenSource()
     let _updateService = new UpdateService(workspaceDirectory, privateKey)
-    let _logger = new WebServerLogger()
+    let _logger = 
+        let tmp = new WebServerLogger()
+        logProvider.AddLogSourceToLoggers(tmp)
+        tmp
 
     let getFileFullPath(fileName: String) (ctx: HttpContext) = async {
         match _updateService.GetFilePath(fileName) with
