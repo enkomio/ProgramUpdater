@@ -79,6 +79,9 @@ type WebServer(binding: Uri, workspaceDirectory: String, privateKey: Byte array,
         then webPart ctx
         else FORBIDDEN "Forbidden" ctx
 
+    let pathNotFound(p: String)(ctx: HttpContext) =
+        NOT_FOUND "Path not valid" ctx
+
     let buildCfg(uri: Uri) = 
         { defaultConfig with
             bindings = [HttpBinding.create HTTP (IPAddress.Parse uri.Host) (uint16 uri.Port)]
@@ -100,7 +103,8 @@ type WebServer(binding: Uri, workspaceDirectory: String, privateKey: Byte array,
     default this.GetRoutes() = [
         GET >=> preFilter >=> choose [ 
             path (this.PathPrefix + "/") >=> index          
-            path (this.PathPrefix + "/latest") >=> latest            
+            path (this.PathPrefix + "/latest") >=> latest     
+            pathScan "/%s" pathNotFound
         ] >=> postFilter
 
         POST >=> preFilter >=> choose [ 
@@ -109,6 +113,7 @@ type WebServer(binding: Uri, workspaceDirectory: String, privateKey: Byte array,
 
             // get the specified file
             pathScan (PrintfFormat<_, _, _, _, String>(this.PathPrefix + "/file/%s")) getFileFullPath >=> authorize downloadFile
+            pathScan "/%s" pathNotFound
         ] >=> postFilter
     ]
 
